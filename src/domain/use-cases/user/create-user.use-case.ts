@@ -1,8 +1,8 @@
-import { CreateUserDto } from "#/domain/dtos";
 import { UserRepository } from "#/domain/repositories/user.repository";
+import { CreatePersonalInformationDto, CreateUserDto } from "#/domain/dtos";
 
 interface CreateUserUseCase {
-  execute(registerUserDto: CreateUserDto): Promise<unknown>;
+  execute(registerUserDto: CreateUserDto, registerPersonalInformationDto: CreatePersonalInformationDto): Promise<any>;
 }
 
 export class CreateUser implements CreateUserUseCase {
@@ -10,8 +10,10 @@ export class CreateUser implements CreateUserUseCase {
     private readonly userRepository: UserRepository,
   ) { }
 
-  async execute(registerUserDto: CreateUserDto): Promise<unknown> {
-    const user = await this.userRepository.createUser(registerUserDto);
-    return user;
+  async execute(registerUserDto: CreateUserDto, registerPersonalInformationDto: CreatePersonalInformationDto): Promise<any> {
+    const userCreated = await this.userRepository.createUser(registerUserDto);
+    const personalInformation = await this.userRepository.createPersonalInformation(registerPersonalInformationDto, userCreated.user.id, userCreated.transaction);
+
+    return { ...userCreated.user, personalInformation };
   }
 }

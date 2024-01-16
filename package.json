@@ -9,7 +9,9 @@
     "clear": "rimraf build/",
     "clean_build": "npm run clear && npm run build",
     "run:migrate": "npx sequelize db:migrate --options-path ./src/data/postgreSQL/storage/.sequelizerc",
-    "migrate:generate": "npx sequelize migration:generate --options-path ./src/data/postgreSQL/storage/.sequelizerc --name"
+    "migrate:generate": "npx sequelize migration:generate --options-path ./src/data/postgreSQL/storage/.sequelizerc --name",
+    "seed": "npx sequelize db:migrate --options-path ./src/data/postgreSQL/storage/.sequelizerc",
+    "seed:generate": "npx sequelize seed:generate --options-path ./src/data/postgreSQL/storage/.sequelizerc --name"
   },
   "author": "juandav9312",
   "license": "ISC",
