@@ -2,11 +2,12 @@
 import {
   Model,
   DataTypes,
-  CreationOptional,
   InferAttributes,
+  CreationOptional,
   InferCreationAttributes,
 } from 'sequelize';
 import { sequelize } from '../postgreSQL-database';
+import PersonalInformation from './PersonalInformation.model';
 
 export default class User extends Model<InferAttributes<User>, InferCreationAttributes<User>> {
   declare id: CreationOptional<number>;
@@ -19,6 +20,10 @@ export default class User extends Model<InferAttributes<User>, InferCreationAttr
   declare createdAt: CreationOptional<Date>;
   declare updatedAt: CreationOptional<Date>;
   declare deletedAt: CreationOptional<Date>;
+
+  static associate(): void {
+    User.hasOne(PersonalInformation, { as: 'personalInformation', sourceKey: 'id', foreignKey: 'userId' });
+  }
 }
 
 User.init(

@@ -9,7 +9,7 @@ export interface PersonalInformationMapperModel {
   businessName?: string;
   documentNumber: number;
   dv?: number;
-  documentTypeId: number;
+  identificationId: number;
   taxLiabilityId: number;
   personTypeId: number;
 };
@@ -24,7 +24,7 @@ export const PersonalInformationMapper = (model: Record<string, any>): PersonalI
     businessName,
     documentNumber,
     dv,
-    documentTypeId,
+    identificationId,
     taxLiabilityId,
     personTypeId,
   } = model;
@@ -42,7 +42,7 @@ export const PersonalInformationMapper = (model: Record<string, any>): PersonalI
     businessName,
     documentNumber,
     dv,
-    documentTypeId,
+    identificationId,
     taxLiabilityId,
     personTypeId,
   };

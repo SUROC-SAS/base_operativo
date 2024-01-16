@@ -6,9 +6,10 @@ import Identification from './Identification.model';
 import {
   Model,
   DataTypes,
-  CreationOptional,
   InferAttributes,
+  CreationOptional,
   InferCreationAttributes,
+  HasOneGetAssociationMixin,
 } from 'sequelize';
 import { sequelize } from '../postgreSQL-database';
 
@@ -22,12 +23,31 @@ export default class PersonalInformation extends Model<InferAttributes<PersonalI
   declare documentNumber: number;
   declare dv: CreationOptional<number>;
   declare taxLiabilityId: CreationOptional<number>;
-  declare documentTypeId: number;
+  declare identificationId: number;
   declare personTypeId: CreationOptional<number>;
   declare userId: number;
   declare createdAt: CreationOptional<Date>;
   declare updatedAt: CreationOptional<Date>;
   declare deletedAt: CreationOptional<Date>;
+
+  declare user?: User;
+  declare getUser: HasOneGetAssociationMixin<User>;
+
+  declare personType?: PersonType;
+  declare getPersonType: HasOneGetAssociationMixin<PersonType>;
+
+  declare taxLiability?: TaxLiability;
+  declare getTaxLiability: HasOneGetAssociationMixin<TaxLiability>;
+
+  declare identification?: Identification;
+  declare getIdentification: HasOneGetAssociationMixin<Identification>;
+
+  static associate(): void {
+    PersonalInformation.belongsTo(User, { as: 'user', targetKey: 'id', foreignKey: 'userId' });
+    PersonalInformation.belongsTo(PersonType, { as: 'personType', targetKey: 'id', foreignKey: 'personTypeId' });
+    PersonalInformation.belongsTo(TaxLiability, { as: 'taxLiability', targetKey: 'id', foreignKey: 'taxLiabilityId' });
+    PersonalInformation.belongsTo(Identification, { as: 'identification', targetKey: 'id', foreignKey: 'identificationId' });
+  }
 }
 
 PersonalInformation.init(
@@ -74,7 +94,7 @@ PersonalInformation.init(
         model: TaxLiability,
       },
     },
-    documentTypeId: {
+    identificationId: {
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {

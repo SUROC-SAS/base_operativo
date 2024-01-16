@@ -49,10 +49,10 @@ module.exports = {
         allowNull: true,
         references: {
           key: "id",
-          model: "TaxResponsabilities",
+          model: "TaxLiabilities",
         },
       },
-      documentTypeId: {
+      identificationId: {
         type: Sequelize.INTEGER,
         allowNull: false,
         references: {

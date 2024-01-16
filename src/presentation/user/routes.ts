@@ -1,7 +1,7 @@
-import { UserDataSourceImpl } from "#/infrastructure/datasources/user.datasource.impl";
-import { UserRepositoryImpl } from "#/infrastructure/repositories/user.repository.impl";
 import { Router } from "express";
 import { UserController } from "./controller";
+import { UserDataSourceImpl } from "#/infrastructure/datasources/user.datasource.impl";
+import { UserRepositoryImpl } from "#/infrastructure/repositories/user.repository.impl";
 
 export class UserRoutes {
   static get routes(): Router {
@@ -12,6 +12,7 @@ export class UserRoutes {
     const controller = new UserController(repository);
 
     router.post('/', controller.createUser);
+
     return router;
   }
 }

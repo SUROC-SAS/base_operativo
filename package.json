@@ -8,9 +8,9 @@
     "build": "tsc --project tsconfig.json && tsc-alias -p tsconfig.json",
     "clear": "rimraf build/",
     "clean_build": "npm run clear && npm run build",
-    "run:migrate": "npx sequelize db:migrate --options-path ./src/data/postgreSQL/storage/.sequelizerc",
+    "migrate": "npx sequelize db:migrate --options-path ./src/data/postgreSQL/storage/.sequelizerc",
     "migrate:generate": "npx sequelize migration:generate --options-path ./src/data/postgreSQL/storage/.sequelizerc --name",
-    "seed": "npx sequelize db:migrate --options-path ./src/data/postgreSQL/storage/.sequelizerc",
+    "seed": "npx sequelize db:seed:all --options-path ./src/data/postgreSQL/storage/.sequelizerc",
     "seed:generate": "npx sequelize seed:generate --options-path ./src/data/postgreSQL/storage/.sequelizerc --name"
   },
   "author": "juandav9312",
