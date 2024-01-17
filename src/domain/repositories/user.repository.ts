@@ -1,9 +1,10 @@
 import { TransactionAdapter } from "#/config/transaction";
 import { UserMapperModel } from "#/infrastructure/mappers";
+import { CreateAddressDto } from "../dtos/user/create-address.dto";
 import { CreatePersonalInformationDto, CreateUserDto } from "../dtos";
-import { PersonTypeMapperModel } from "#/infrastructure/mappers/user/person-type.mapper";
-import { IdentificationMapperModel } from "#/infrastructure/mappers/user/Identification.mapper";
-import { TaxLiabilityMapperModel } from "#/infrastructure/mappers/user/tax-liability.mapper";
+import { AddressMapperModel } from "#/infrastructure/mappers/user/address.mapper";
+import { CreateContactInformationDto } from "../dtos/user/create-contact-information.dto";
+import { ContactInformationMapperModel } from "#/infrastructure/mappers/user/contact-information.mapper";
 import { PersonalInformationMapperModel } from "#/infrastructure/mappers/user/personal-information.mapper";
 
 interface createdUserResult {
@@ -12,10 +13,8 @@ interface createdUserResult {
 }
 
 export abstract class UserRepository {
-  abstract createUser(createUserDto: CreateUserDto): Promise<createdUserResult>;
+  abstract createUser(createUserDto: CreateUserDto): Promise<any>;
   abstract createPersonalInformation(createPersonalInformationDto: CreatePersonalInformationDto, userId: number, transactionAdapter: TransactionAdapter): Promise<PersonalInformationMapperModel>;
-  abstract getPersonTypeById(id: number): Promise<PersonTypeMapperModel>;
-  abstract getTaxLiabilityById(id: number): Promise<TaxLiabilityMapperModel>;
-  abstract getIdentificationById(id: number): Promise<IdentificationMapperModel>;
-  abstract validateExistence(documentNumber: number, identificationId: number, userId?: number): Promise<boolean>;
+  abstract createContactInformation(createPersonalInformationDto: CreateContactInformationDto, userId: number, transactionAdapter: TransactionAdapter): Promise<ContactInformationMapperModel>;
+  abstract createAddress(createPersonalInformationDto: CreateAddressDto, userId: number, transactionAdapter: TransactionAdapter): Promise<AddressMapperModel>;
 }

@@ -1,8 +1,7 @@
 
-import User from './User.model';
-import PersonType from './PersonType.model';
-import TaxLiability from './TaxLiability.model';
-import Identification from './Identification.model';
+import User from './user.model';
+import PersonType from './person-type.model';
+import TaxLiability from './tax-liability.model';
 import {
   Model,
   DataTypes,
@@ -12,6 +11,7 @@ import {
   HasOneGetAssociationMixin,
 } from 'sequelize';
 import { sequelize } from '../postgreSQL-database';
+import Identification from './identification.model';
 
 export default class PersonalInformation extends Model<InferAttributes<PersonalInformation>, InferCreationAttributes<PersonalInformation>> {
   declare id: CreationOptional<number>;

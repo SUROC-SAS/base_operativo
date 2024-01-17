@@ -1,34 +1,28 @@
 import { TransactionAdapter } from "#/config/transaction";
 import { UserDataSource, UserRepository } from "#/domain";
-import { PersonTypeMapperModel } from "../mappers/user/person-type.mapper";
+import { AddressMapperModel } from "../mappers/user/address.mapper";
+import { CreateAddressDto } from "#/domain/dtos/user/create-address.dto";
 import { CreatePersonalInformationDto, CreateUserDto } from "#/domain/dtos";
-import { IdentificationMapperModel } from "../mappers/user/Identification.mapper";
-import { TaxLiabilityMapperModel } from "../mappers/user/tax-liability.mapper";
+import { ContactInformationMapperModel } from "../mappers/user/contact-information.mapper";
+import { PersonalInformationMapperModel } from "../mappers/user/personal-information.mapper";
+import { CreateContactInformationDto } from "#/domain/dtos/user/create-contact-information.dto";
 
 export class UserRepositoryImpl implements UserRepository {
   constructor(private readonly userDataSource: UserDataSource) { }
+
 
   async createUser(createUserDto: CreateUserDto): Promise<any> {
     return this.userDataSource.createUser(createUserDto);
   }
 
-  async createPersonalInformation(createPersonalInformationDto: CreatePersonalInformationDto, userId: number, transaction: TransactionAdapter): Promise<any> {
-    return this.userDataSource.createPersonalInformation(createPersonalInformationDto, userId, transaction);
+  async createPersonalInformation(createPersonalInformationDto: CreatePersonalInformationDto, userId: number, transactionAdapter: TransactionAdapter): Promise<PersonalInformationMapperModel> {
+    return this.userDataSource.createPersonalInformation(createPersonalInformationDto, userId, transactionAdapter);
   }
 
-  async getPersonTypeById(id: number): Promise<PersonTypeMapperModel> {
-    return this.userDataSource.getPersonTypeById(id);
+  createContactInformation(createPersonalInformationDto: CreateContactInformationDto, userId: number, transactionAdapter: TransactionAdapter): Promise<ContactInformationMapperModel> {
+    return this.userDataSource.createContactInformation(createPersonalInformationDto, userId, transactionAdapter);
   }
-
-  async getTaxLiabilityById(id: number): Promise<TaxLiabilityMapperModel> {
-    return this.userDataSource.getTaxLiabilityById(id);
-  }
-
-  async getIdentificationById(id: number): Promise<IdentificationMapperModel> {
-    return this.userDataSource.getIdentificationById(id);
-  }
-
-  async validateExistence(documentNumber: number, identificationId: number, userId?: number): Promise<boolean> {
-    return this.userDataSource.validateExistence(documentNumber, identificationId, userId);
+  createAddress(createPersonalInformationDto: CreateAddressDto, userId: number, transactionAdapter: TransactionAdapter): Promise<AddressMapperModel> {
+    return this.userDataSource.createAddress(createPersonalInformationDto, userId, transactionAdapter);
   }
 }

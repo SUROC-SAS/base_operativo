@@ -6,3 +6,8 @@ export interface PersonType {
   updatedAt: Date;
   deletedAt: Date;
 };
+
+export enum PersonTypeCodes {
+  PERSONA_JURIDICA = 'PJ',
+  PERSONA_NATURAL = 'PN',
+}

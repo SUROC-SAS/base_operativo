@@ -2,31 +2,31 @@ import { CustomError } from "#/domain/errors/custom.error";
 
 export interface PersonalInformationMapperModel {
   id: number;
+  dv?: number;
   firstName?: string;
   middleName?: string;
+  personTypeId: number;
+  businessName?: string;
   firstSurname?: string;
   secondSurname?: string;
-  businessName?: string;
   documentNumber: number;
-  dv?: number;
-  identificationId: number;
   taxLiabilityId: number;
-  personTypeId: number;
+  identificationId: number;
 };
 
 export const PersonalInformationMapper = (model: Record<string, any>): PersonalInformationMapperModel => {
   const {
     id,
+    dv,
     firstName,
     middleName,
-    firstSurname,
-    secondSurname,
     businessName,
-    documentNumber,
-    dv,
-    identificationId,
-    taxLiabilityId,
+    firstSurname,
     personTypeId,
+    secondSurname,
+    taxLiabilityId,
+    documentNumber,
+    identificationId,
   } = model;
 
   if (!id) {
@@ -35,15 +35,15 @@ export const PersonalInformationMapper = (model: Record<string, any>): PersonalI
 
   return {
     id,
+    dv,
     firstName,
     middleName,
     firstSurname,
-    secondSurname,
-    businessName,
-    documentNumber,
-    dv,
-    identificationId,
-    taxLiabilityId,
     personTypeId,
+    businessName,
+    secondSurname,
+    taxLiabilityId,
+    documentNumber,
+    identificationId,
   };
 };

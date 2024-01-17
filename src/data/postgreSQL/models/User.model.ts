@@ -7,7 +7,7 @@ import {
   InferCreationAttributes,
 } from 'sequelize';
 import { sequelize } from '../postgreSQL-database';
-import PersonalInformation from './PersonalInformation.model';
+import PersonalInformation from './personal-information.model';
 
 export default class User extends Model<InferAttributes<User>, InferCreationAttributes<User>> {
   declare id: CreationOptional<number>;

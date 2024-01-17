@@ -11,7 +11,8 @@
     "migrate": "npx sequelize db:migrate --options-path ./src/data/postgreSQL/storage/.sequelizerc",
     "migrate:generate": "npx sequelize migration:generate --options-path ./src/data/postgreSQL/storage/.sequelizerc --name",
     "seed": "npx sequelize db:seed:all --options-path ./src/data/postgreSQL/storage/.sequelizerc",
-    "seed:generate": "npx sequelize seed:generate --options-path ./src/data/postgreSQL/storage/.sequelizerc --name"
+    "seed:generate": "npx sequelize seed:generate --options-path ./src/data/postgreSQL/storage/.sequelizerc --name",
+    "reset": "ts-node scripts/clearDB.ts && npm run migrate && npm run seed"
   },
   "author": "juandav9312",
   "license": "ISC",

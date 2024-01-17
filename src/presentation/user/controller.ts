@@ -11,7 +11,7 @@ export class UserController {
 
   createUser = async (req: Request, res: Response) => {
     const [errUserDto, createUserDto] = CreateUserDto.create(req.body);
-    const [errPersonalInformationDto, createPersonalInformationDto] = await CreatePersonalInformationDto.create(req.body, this.userRepository);
+    const [errPersonalInformationDto, createPersonalInformationDto] = await CreatePersonalInformationDto.create(req.body);
 
     if (errUserDto) return res.status(400).json({ err: errUserDto });
     if (errPersonalInformationDto) return res.status(400).json({ err: errPersonalInformationDto });

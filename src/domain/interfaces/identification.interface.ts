@@ -8,7 +8,6 @@ export interface Identification {
   deletedAt: Date;
 };
 
-
 export enum IdentificationCodes {
   REGISTRO_CIVIL = 'DT01',
   TARJETA_IDENTIDAD = 'DT02',
