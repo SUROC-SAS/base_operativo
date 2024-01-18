@@ -5,20 +5,25 @@ import { resolve } from 'path';
 import Mail from 'nodemailer/lib/mailer';
 import nodemailer, { SendMailOptions } from 'nodemailer';
 
+interface OptionsEmail {
+  host: string;
+  user: string;
+  pass: string;
+  port: number;
+}
+
 class EmailAdapter {
   private readonly _transport: Mail;
   private _fromEmail = process.env.EMAIL_ADMIN;
 
-  constructor() {
-    const { SMTP_HOST, SMTP_USER, SMTP_PASSWORD } = process.env;
-
+  constructor({ host, user, pass, port }: OptionsEmail) {
     this._transport = nodemailer.createTransport({
-      host: SMTP_HOST,
-      port: 587,
+      host,
+      port,
       secure: false,
       auth: {
-        user: SMTP_USER,
-        pass: SMTP_PASSWORD,
+        user,
+        pass,
       },
     });
   }
