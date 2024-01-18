@@ -6,52 +6,34 @@ import {
   InferCreationAttributes,
 } from 'sequelize';
 import { sequelize } from '../postgreSQL-database';
+import PersonalInformation from './personal-information.model';
 
-export default class User extends Model<InferAttributes<User>, InferCreationAttributes<User>> {
+export default class TaxLiability extends Model<InferAttributes<TaxLiability>, InferCreationAttributes<TaxLiability>> {
   declare id: CreationOptional<number>;
-  declare uid: CreationOptional<string>;
-  declare email: string;
-  declare password: string;
-  declare emailValidate: boolean;
-  declare active: boolean;
-  declare lastAccess?: CreationOptional<Date> | null;
+  declare name: string;
+  declare code: string;
   declare createdAt: CreationOptional<Date>;
   declare updatedAt: CreationOptional<Date>;
   declare deletedAt: CreationOptional<Date>;
+
+  static associate(): void {
+    TaxLiability.hasMany(PersonalInformation, { as: 'personalInformations', foreignKey: 'taxLiabilityId', sourceKey: 'id' });
+  }
 }
 
-User.init(
+TaxLiability.init(
   {
     id: {
       type: DataTypes.INTEGER,
       autoIncrement: true,
       primaryKey: true,
     },
-    uid: {
-      type: DataTypes.STRING,
-      allowNull: true,
-      unique: true,
-    },
-    email: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      unique: true,
-    },
-    password: {
+    name: {
       type: DataTypes.STRING,
       allowNull: false,
     },
-    emailValidate: {
-      type: DataTypes.BOOLEAN,
-      defaultValue: false,
-    },
-    lastAccess: {
-      type: DataTypes.DATE,
-      allowNull: true,
-    },
-    active: {
-      type: DataTypes.BOOLEAN,
-      defaultValue: true,
+    code: {
+      type: DataTypes.STRING,
       allowNull: false,
     },
     createdAt: {
@@ -71,9 +53,6 @@ User.init(
   {
     sequelize,
     paranoid: true,
-    tableName: 'Users',
-    defaultScope: {
-      attributes: { exclude: ['password'] },
-    },
+    tableName: 'TaxLiabilities',
   }
 );

@@ -1,7 +1,6 @@
-import { TransactionAdapter } from "#/config/transaction";
+import { User } from "../interfaces";
 import { CreateUserDto } from "../dtos";
-
+import { CreatePersonalInformationDto } from "../dtos/user/create-personalInformation.dto";
 export abstract class UserDataSource {
-  abstract createUser(createUserDto: CreateUserDto): Promise<any>;
-  abstract createPersonalInformation(createPersonalInformationDto: any, transaction: TransactionAdapter): Promise<any>;
+  abstract createUser(createUserDto: CreateUserDto, personalInformationDto: CreatePersonalInformationDto): Promise<User>;
 }
