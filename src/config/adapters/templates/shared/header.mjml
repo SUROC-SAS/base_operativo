@@ -1,0 +1,5 @@
+<mj-section background-color="#FFF">
+  <mj-column width="100%" vertical-align="middle">
+    <mj-image width="300px" src="https://dev-sportplace.duxorbis.com/assets/img/suroc/sport_place.svg" />
+  </mj-column>
+</mj-section>
