@@ -30,7 +30,12 @@ export const sequelize = new Sequelize({
 
 export const initModels = () => {
   const models = {
-    User: require('./models/User.model').default,
+    User: require('./models/user.model').default,
+    PersonType: require('./models/person-type.model').default,
+    TaxLiability: require('./models/tax-liability.model').default,
+    Identification: require('./models/identification.model').default,
+    ContactInformation: require('./models/contact-information.model').default,
+    PersonalInformation: require('./models/personal-information.model').default,
   };
 
   Object.values(models)

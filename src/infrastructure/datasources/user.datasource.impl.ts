@@ -1,19 +1,20 @@
-import User from "#/data/postgreSQL/models/user.model";
-import Identification from "#/data/postgreSQL/models/identification.model";
-import { Identifications, PersonTypes } from '#/infrastructure/interfaces';
-import { sequelize } from "#/data/postgreSQL";
-import { UserDataSource } from "#/domain";
-import { CreateUserDto } from "#/domain/dtos";
-import { CustomError } from "#/domain/errors/custom.error";
 import { UserMapper } from "../mappers";
-import { CreatePersonalInformationDto } from "#/domain/dtos/user/create-personalInformation.dto";
 import { Transaction } from "sequelize";
+import { UserDataSource } from "#/domain";
+import { sequelize } from "#/data/postgreSQL";
+import User from "#/data/postgreSQL/models/user.model";
+import { CustomError } from "#/domain/errors/custom.error";
 import PersonType from "#/data/postgreSQL/models/person-type.model";
+import { Identifications, PersonTypes } from '#/infrastructure/interfaces';
+import Identification from "#/data/postgreSQL/models/identification.model";
+import ContactInformation from "#/data/postgreSQL/models/contact-information.model";
+import { ContactInformationMapper } from "../mappers/user/contactInformation.mapper";
 import PersonalInformation from "#/data/postgreSQL/models/personal-information.model";
 import { PersonalInformationMapper } from "../mappers/user/personalInformation.mapper";
+import { CreateContactInformationDto, CreatePersonalInformationDto, CreateUserDto } from "#/domain/dtos";
 
 export class UserDataSourceImpl implements UserDataSource {
-  async createUser(userDto: CreateUserDto, personalInformationDto: CreatePersonalInformationDto) {
+  async createUser(userDto: CreateUserDto, personalInformationDto: CreatePersonalInformationDto, contactInformationDto: CreateContactInformationDto) {
     const transaction = await sequelize.transaction({
       isolationLevel: Transaction.ISOLATION_LEVELS.READ_COMMITTED,
     });
@@ -40,8 +41,10 @@ export class UserDataSourceImpl implements UserDataSource {
       }, { transaction });
 
       const personalInformation = await this.createPersonalInformation(personalInformationDto, user.id, transaction);
+      const contactInformation = await this.createContactInformation(contactInformationDto, user.id, transaction);
       const userMapper = UserMapper(user);
       userMapper.personalInformation = personalInformation;
+      userMapper.contactInformation = contactInformation;
 
       await transaction.commit();
       return userMapper;
@@ -133,5 +136,16 @@ export class UserDataSourceImpl implements UserDataSource {
     }, { transaction });
 
     return PersonalInformationMapper(personalInformation);
+  }
+
+  private async createContactInformation(contactInformationDto: CreateContactInformationDto, userId: number, transaction: Transaction) {
+    const contactInformation = await ContactInformation.create({
+      mobile: contactInformationDto.mobile,
+      phoneOne: contactInformationDto.phoneOne,
+      phoneTwo: contactInformationDto.phoneTwo,
+      userId,
+    }, { transaction });
+
+    return ContactInformationMapper(contactInformation);
   }
 }
