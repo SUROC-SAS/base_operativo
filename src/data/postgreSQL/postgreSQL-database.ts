@@ -30,7 +30,15 @@ export const sequelize = new Sequelize({
 
 export const initModels = () => {
   const models = {
-    User: require('./models/User.model').default,
+    User: require('./models/user.model').default,
+    State: require('./models/state.model').default,
+    Country: require('./models/country.model').default,
+    Address: require('./models/address.model').default,
+    Municipality: require('./models/municipality.model').default,
+    TaxLiability: require('./models/tax-liability.model').default,
+    Identification: require('./models/identification.model').default,
+    PersonalInformation: require('./models/personal-information.model').default,
+    AssignedMunicipality: require('./models/assigned-municipality.model').default,
   };
 
   Object.values(models)
