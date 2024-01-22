@@ -12,7 +12,7 @@ interface OptionsEmail {
   port: number;
 }
 
-class EmailAdapter {
+class EmailService {
   private readonly _transport: Mail;
   private _fromEmail = process.env.EMAIL_ADMIN;
 
@@ -41,15 +41,15 @@ class EmailAdapter {
   }
 
   prepareHtml(templateName: string, data: { [k: string]: unknown }) {
-    const template = resolve(__dirname, '..', '..', '..', 'src', 'config', 'adapters', `templates/${templateName}.mjml`);
+    const template = resolve(__dirname, '..', '..', '..', 'src', 'config', 'Services', `templates/${templateName}.mjml`);
     const compileTemplate = hbs.compile(fs.readFileSync(template, 'utf-8'));
 
     const html = mjml2html(compileTemplate(data), {
-      filePath: resolve(__dirname, '..', '..', '..', 'src', 'config', 'adapters', 'templates'),
+      filePath: resolve(__dirname, '..', '..', '..', 'src', 'config', 'Services', 'templates'),
     }).html;
 
     return html;
   }
 }
 
-export default EmailAdapter;
+export default EmailService;
