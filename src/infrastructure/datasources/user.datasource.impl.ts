@@ -3,17 +3,24 @@ import Identification from "#/data/postgreSQL/models/identification.model";
 import { Identifications, PersonTypes } from '#/infrastructure/interfaces';
 import { sequelize } from "#/data/postgreSQL";
 import { UserDataSource } from "#/domain";
-import { CreateUserDto } from "#/domain/dtos";
+import { CreateAssignedRoleDto, CreatePersonalInformationDto } from "#/domain/dtos";
 import { CustomError } from "#/domain/errors/custom.error";
 import { UserMapper } from "../mappers";
-import { CreatePersonalInformationDto } from "#/domain/dtos/user/create-personalInformation.dto";
 import { Transaction } from "sequelize";
 import PersonType from "#/data/postgreSQL/models/person-type.model";
 import PersonalInformation from "#/data/postgreSQL/models/personal-information.model";
 import { PersonalInformationMapper } from "../mappers/user/personalInformation.mapper";
+import { ICreateUserDtos } from "#/domain/interfaces";
+import AssignedRole from "#/data/postgreSQL/models/assigned-role.model";
+import Role from "#/data/postgreSQL/models/role.model";
+import { AssignedRoleMapper } from "../mappers/user/assigned-role.mapper";
 
 export class UserDataSourceImpl implements UserDataSource {
-  async createUser(userDto: CreateUserDto, personalInformationDto: CreatePersonalInformationDto) {
+  async createUser({
+    createUserDto,
+    createPersonalInformationDto,
+    createAssignedRoleDto,
+  }: ICreateUserDtos) {
     const transaction = await sequelize.transaction({
       isolationLevel: Transaction.ISOLATION_LEVELS.READ_COMMITTED,
     });
@@ -21,7 +28,7 @@ export class UserDataSourceImpl implements UserDataSource {
     try {
       const userExit = await User.findOne({
         where: {
-          email: userDto.email
+          email: createUserDto.email
         },
         transaction,
         lock: Transaction.LOCK.UPDATE,
@@ -32,16 +39,18 @@ export class UserDataSourceImpl implements UserDataSource {
       }
 
       const user = await User.create({
-        email: userDto.email,
-        active: userDto.active,
-        password: userDto.password,
-        lastAccess: userDto.lastAccess,
-        emailValidate: userDto.emailValidate,
+        email: createUserDto.email,
+        active: createUserDto.active,
+        password: createUserDto.password,
+        lastAccess: createUserDto.lastAccess,
+        emailValidate: createUserDto.emailValidate,
       }, { transaction });
 
-      const personalInformation = await this.createPersonalInformation(personalInformationDto, user.id, transaction);
+      const personalInformation = await this.createPersonalInformation(createPersonalInformationDto, user.id, transaction);
+      const assignedRoles = await this.createAssignedRoles(createAssignedRoleDto, user.id, transaction);
       const userMapper = UserMapper(user);
       userMapper.personalInformation = personalInformation;
+      userMapper.assignedRoles = assignedRoles;
 
       await transaction.commit();
       return userMapper;
@@ -56,8 +65,8 @@ export class UserDataSourceImpl implements UserDataSource {
     }
   }
 
-  private async createPersonalInformation(createPersonalInformationDto: CreatePersonalInformationDto, userId: number, transaction: Transaction) {
-    const identification = await Identification.findByPk(createPersonalInformationDto.identificationId, {
+  private async createPersonalInformation(createcreatePersonalInformationDto: CreatePersonalInformationDto, userId: number, transaction: Transaction) {
+    const identification = await Identification.findByPk(createcreatePersonalInformationDto.identificationId, {
       transaction
     });
 
@@ -69,9 +78,9 @@ export class UserDataSourceImpl implements UserDataSource {
     const nit = Identifications.NIT === identification.code;
     const nitForeign = Identifications.NIT_PAIS === identification.code;
     if (nitForeign) {
-      error = createPersonalInformationDto.validateForeign();
+      error = createcreatePersonalInformationDto.validateForeign();
     } else if (nit) {
-      error = createPersonalInformationDto.validateNit();
+      error = createcreatePersonalInformationDto.validateNit();
     } else {
       const personType = await PersonType.findOne({
         where: {
@@ -84,8 +93,8 @@ export class UserDataSourceImpl implements UserDataSource {
         throw CustomError.notFound('Person type not found');
       }
 
-      createPersonalInformationDto.personTypeId = personType.id;
-      error = createPersonalInformationDto.validateNational();
+      createcreatePersonalInformationDto.personTypeId = personType.id;
+      error = createcreatePersonalInformationDto.validateNational();
     }
 
     if (error) {
@@ -95,7 +104,7 @@ export class UserDataSourceImpl implements UserDataSource {
     if (nit) {
       const personType = await PersonType.findOne({
         where: {
-          id: createPersonalInformationDto.personTypeId,
+          id: createcreatePersonalInformationDto.personTypeId,
         },
         transaction,
       });
@@ -107,8 +116,8 @@ export class UserDataSourceImpl implements UserDataSource {
 
     const personalInformationExist = await PersonalInformation.findOne({
       where: {
-        documentNumber: createPersonalInformationDto.documentNumber,
-        identificationId: createPersonalInformationDto.identificationId,
+        documentNumber: createcreatePersonalInformationDto.documentNumber,
+        identificationId: createcreatePersonalInformationDto.identificationId,
       },
       transaction,
       lock: Transaction.LOCK.UPDATE,
@@ -119,19 +128,35 @@ export class UserDataSourceImpl implements UserDataSource {
     }
 
     const personalInformation = await PersonalInformation.create({
-      dv: createPersonalInformationDto.dv,
-      firstName: createPersonalInformationDto.firstName,
-      middleName: createPersonalInformationDto.middleName,
-      firstSurname: createPersonalInformationDto.firstSurname,
-      secondSurname: createPersonalInformationDto.secondSurname,
-      businessName: createPersonalInformationDto.businessName,
-      documentNumber: createPersonalInformationDto.documentNumber,
-      personTypeId: createPersonalInformationDto.personTypeId,
-      taxLiabilityId: createPersonalInformationDto.taxLiabilityId,
-      identificationId: createPersonalInformationDto.identificationId,
+      dv: createcreatePersonalInformationDto.dv,
+      firstName: createcreatePersonalInformationDto.firstName,
+      middleName: createcreatePersonalInformationDto.middleName,
+      firstSurname: createcreatePersonalInformationDto.firstSurname,
+      secondSurname: createcreatePersonalInformationDto.secondSurname,
+      businessName: createcreatePersonalInformationDto.businessName,
+      documentNumber: createcreatePersonalInformationDto.documentNumber,
+      personTypeId: createcreatePersonalInformationDto.personTypeId,
+      taxLiabilityId: createcreatePersonalInformationDto.taxLiabilityId,
+      identificationId: createcreatePersonalInformationDto.identificationId,
       userId,
     }, { transaction });
 
     return PersonalInformationMapper(personalInformation);
+  }
+
+  private async createAssignedRoles(createAssignedRoleDto: CreateAssignedRoleDto, userId: number, transaction: Transaction) {
+    const roles = await Role.findAll({
+      where: { code: createAssignedRoleDto.roles },
+      transaction
+    });
+
+    createAssignedRoleDto.roles.forEach(code => {
+      const exist = roles.some(role => role.code === code);
+      if (!exist) throw CustomError.badRequest(`Código ${code} no encontrado en roles.`);
+    });
+
+    const assignedRoles = await AssignedRole.bulkCreate(roles.map(role => ({ roleId: role.id, userId })), { transaction });
+
+    return assignedRoles.map(assignedRole => AssignedRoleMapper(assignedRole));
   }
 }

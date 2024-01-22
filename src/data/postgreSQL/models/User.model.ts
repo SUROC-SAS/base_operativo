@@ -1,10 +1,13 @@
 import {
   Model,
   DataTypes,
-  CreationOptional,
   InferAttributes,
+  CreationOptional,
   InferCreationAttributes,
+  HasManyGetAssociationsMixin,
+  BelongsToManyAddAssociationsMixin,
 } from 'sequelize';
+import Role from './role.model';
 import { sequelize } from '../postgreSQL-database';
 
 export default class User extends Model<InferAttributes<User>, InferCreationAttributes<User>> {
@@ -18,6 +21,19 @@ export default class User extends Model<InferAttributes<User>, InferCreationAttr
   declare createdAt: CreationOptional<Date>;
   declare updatedAt: CreationOptional<Date>;
   declare deletedAt: CreationOptional<Date>;
+
+  declare roles?: Role[];
+  declare getRoles: HasManyGetAssociationsMixin<Role>;
+  declare addRoles: BelongsToManyAddAssociationsMixin<Role, Role['id']>;
+
+  static associate(): void {
+    User.belongsToMany(Role, {
+      through: 'AssignedRoles',
+      foreignKey: 'userId',
+      otherKey: 'roleId',
+      as: 'roles',
+    });
+  }
 }
 
 User.init(
