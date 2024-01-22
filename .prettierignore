@@ -1,0 +1,5 @@
+.husky
+.gitignore
+build
+node_modules
+/*.json

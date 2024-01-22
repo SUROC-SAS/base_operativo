@@ -1,0 +1,4 @@
+!.build
+.build/*
+storage/*
+node_modules/*

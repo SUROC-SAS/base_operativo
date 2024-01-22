@@ -12,7 +12,12 @@
     "seed": "npx sequelize db:seed:all --options-path ./src/data/postgreSQL/storage/.sequelizerc",
     "migrate:generate": "npx sequelize migration:generate --options-path ./src/data/postgreSQL/storage/.sequelizerc --name",
     "seed:generate": "npx sequelize seed:generate --options-path ./src/data/postgreSQL/storage/.sequelizerc --name",
-    "reset": "ts-node scripts/clearDB.ts && npm run migrate && npm run seed"
+    "reset": "ts-node scripts/clearDB.ts && npm run migrate && npm run seed",
+    "lint": "eslint . --ext .ts",
+    "prettier": "prettier --check .",
+    "lint:fix": "eslint . --ext .ts --fix",
+    "prettier:fix": "prettier --write .",
+    "prepare": "husky install"
   },
   "author": "juandav9312",
   "license": "ISC",
@@ -32,10 +37,27 @@
     "@types/express": "^4.17.21",
     "@types/jsonwebtoken": "^9.0.5",
     "@types/node": "^20.11.0",
+    "commitizen": "^4.3.0",
+    "eslint": "^8.56.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-node": "^11.1.0",
+    "husky": "^8.0.3",
+    "lint-staged": "^15.2.0",
     "nodemon": "^3.0.2",
+    "prettier": "^3.2.4",
     "rimraf": "^5.0.5",
     "sequelize-cli": "^6.6.2",
     "tsc-alias": "^1.8.8",
     "typescript": "^5.3.3"
+  },
+  "config": {
+    "commitizen": {
+      "path": "cz-conventional-changelog"
+    }
+  },
+  "lint-staged": {
+    "**/*": "prettier --write --ignore-unknown",
+    "*.ts": "eslint --cache --fix",
+    "*.{js,css,md}": "prettier --write"
   }
 }
