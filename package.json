@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "cm": "cz",
     "dev": "nodemon",
     "build": "tsc --project tsconfig.json && tsc-alias -p tsconfig.json",
     "clear": "rimraf build/",
@@ -38,6 +39,7 @@
     "@types/jsonwebtoken": "^9.0.5",
     "@types/node": "^20.11.0",
     "commitizen": "^4.3.0",
+    "cz": "^1.8.2",
     "eslint": "^8.56.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-node": "^11.1.0",
