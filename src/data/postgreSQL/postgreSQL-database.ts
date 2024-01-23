@@ -33,6 +33,11 @@ export const initModels = () => {
     User: require('./models/user.model').default,
     Role: require('./models/role.model').default,
     AssignedRole: require('./models/assigned-role.model').default,
+    PersonType: require('./models/person-type.model').default,
+    TaxLiability: require('./models/tax-liability.model').default,
+    Identification: require('./models/identification.model').default,
+    ContactInformation: require('./models/contact-information.model').default,
+    PersonalInformation: require('./models/personal-information.model').default,
   };
 
   Object.values(models)

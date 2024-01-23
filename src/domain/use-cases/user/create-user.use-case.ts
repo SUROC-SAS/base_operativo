@@ -14,4 +14,4 @@ export class CreateUser implements CreateUserUseCase {
     const user = await this.userRepository.createUser(createUserDtos);
     return user;
   }
-}
+} 

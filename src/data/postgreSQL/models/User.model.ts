@@ -4,11 +4,14 @@ import {
   InferAttributes,
   CreationOptional,
   InferCreationAttributes,
+  HasOneGetAssociationMixin,
   HasManyGetAssociationsMixin,
   BelongsToManyAddAssociationsMixin,
 } from 'sequelize';
 import Role from './role.model';
 import { sequelize } from '../postgreSQL-database';
+import ContactInformation from './contact-information.model';
+import PersonalInformation from './personal-information.model';
 
 export default class User extends Model<InferAttributes<User>, InferCreationAttributes<User>> {
   declare id: CreationOptional<number>;
@@ -26,7 +29,16 @@ export default class User extends Model<InferAttributes<User>, InferCreationAttr
   declare getRoles: HasManyGetAssociationsMixin<Role>;
   declare addRoles: BelongsToManyAddAssociationsMixin<Role, Role['id']>;
 
+  declare personalInformation?: PersonalInformation;
+  declare getPersonalInformation: HasOneGetAssociationMixin<PersonalInformation>;
+
+  declare contactInformation?: ContactInformation;
+  declare getContactInformation: HasOneGetAssociationMixin<ContactInformation>;
+
   static associate(): void {
+    User.hasOne(ContactInformation, { as: 'contactInformation', sourceKey: 'id', foreignKey: 'userId' });
+    User.hasOne(PersonalInformation, { as: 'personalInformation', sourceKey: 'id', foreignKey: 'userId' });
+
     User.belongsToMany(Role, {
       through: 'AssignedRoles',
       foreignKey: 'userId',
