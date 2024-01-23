@@ -1,12 +1,8 @@
-import { UserRepository } from "#/domain";
-import { CreateAssignedRoleDto, CreateUserDto } from "#/domain/dtos";
-import { CreateUser } from "#/domain/use-cases";
-import { Request, Response } from 'express';
 import { handleError } from "../error";
 import { UserRepository } from "#/domain";
 import { Request, Response } from 'express';
 import { CreateUser } from "#/domain/use-cases";
-import { CreateContactInformationDto, CreatePersonalInformationDto, CreateUserDto } from "#/domain/dtos";
+import { CreateAssignedRoleDto, CreateContactInformationDto, CreatePersonalInformationDto, CreateUserDto } from "#/domain/dtos";
 
 export class UserController {
   constructor(
