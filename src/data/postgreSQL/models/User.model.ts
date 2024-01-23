@@ -1,11 +1,14 @@
 import {
   Model,
   DataTypes,
-  CreationOptional,
   InferAttributes,
+  CreationOptional,
   InferCreationAttributes,
+  HasOneGetAssociationMixin,
 } from 'sequelize';
 import { sequelize } from '../postgreSQL-database';
+import ContactInformation from './contact-information.model';
+import PersonalInformation from './personal-information.model';
 
 export default class User extends Model<InferAttributes<User>, InferCreationAttributes<User>> {
   declare id: CreationOptional<number>;
@@ -18,6 +21,17 @@ export default class User extends Model<InferAttributes<User>, InferCreationAttr
   declare createdAt: CreationOptional<Date>;
   declare updatedAt: CreationOptional<Date>;
   declare deletedAt: CreationOptional<Date>;
+
+  declare personalInformation?: PersonalInformation;
+  declare getPersonalInformation: HasOneGetAssociationMixin<PersonalInformation>;
+
+  declare contactInformation?: ContactInformation;
+  declare getContactInformation: HasOneGetAssociationMixin<ContactInformation>;
+
+  static associate(): void {
+    User.hasOne(ContactInformation, { as: 'contactInformation', sourceKey: 'id', foreignKey: 'userId' });
+    User.hasOne(PersonalInformation, { as: 'personalInformation', sourceKey: 'id', foreignKey: 'userId' });
+  }
 }
 
 User.init(
