@@ -65,8 +65,8 @@ export class UserDataSourceImpl implements UserDataSource {
     }
   }
 
-  private async createPersonalInformation(createcreatePersonalInformationDto: CreatePersonalInformationDto, userId: number, transaction: Transaction) {
-    const identification = await Identification.findByPk(createcreatePersonalInformationDto.identificationId, {
+  private async createPersonalInformation(createPersonalInformationDto: CreatePersonalInformationDto, userId: number, transaction: Transaction) {
+    const identification = await Identification.findByPk(createPersonalInformationDto.identificationId, {
       transaction
     });
 
@@ -78,9 +78,9 @@ export class UserDataSourceImpl implements UserDataSource {
     const nit = Identifications.NIT === identification.code;
     const nitForeign = Identifications.NIT_PAIS === identification.code;
     if (nitForeign) {
-      error = createcreatePersonalInformationDto.validateForeign();
+      error = createPersonalInformationDto.validateForeign();
     } else if (nit) {
-      error = createcreatePersonalInformationDto.validateNit();
+      error = createPersonalInformationDto.validateNit();
     } else {
       const personType = await PersonType.findOne({
         where: {
@@ -93,8 +93,8 @@ export class UserDataSourceImpl implements UserDataSource {
         throw CustomError.notFound('Person type not found');
       }
 
-      createcreatePersonalInformationDto.personTypeId = personType.id;
-      error = createcreatePersonalInformationDto.validateNational();
+      createPersonalInformationDto.personTypeId = personType.id;
+      error = createPersonalInformationDto.validateNational();
     }
 
     if (error) {
@@ -104,7 +104,7 @@ export class UserDataSourceImpl implements UserDataSource {
     if (nit) {
       const personType = await PersonType.findOne({
         where: {
-          id: createcreatePersonalInformationDto.personTypeId,
+          id: createPersonalInformationDto.personTypeId,
         },
         transaction,
       });
@@ -116,8 +116,8 @@ export class UserDataSourceImpl implements UserDataSource {
 
     const personalInformationExist = await PersonalInformation.findOne({
       where: {
-        documentNumber: createcreatePersonalInformationDto.documentNumber,
-        identificationId: createcreatePersonalInformationDto.identificationId,
+        documentNumber: createPersonalInformationDto.documentNumber,
+        identificationId: createPersonalInformationDto.identificationId,
       },
       transaction,
       lock: Transaction.LOCK.UPDATE,
@@ -128,16 +128,16 @@ export class UserDataSourceImpl implements UserDataSource {
     }
 
     const personalInformation = await PersonalInformation.create({
-      dv: createcreatePersonalInformationDto.dv,
-      firstName: createcreatePersonalInformationDto.firstName,
-      middleName: createcreatePersonalInformationDto.middleName,
-      firstSurname: createcreatePersonalInformationDto.firstSurname,
-      secondSurname: createcreatePersonalInformationDto.secondSurname,
-      businessName: createcreatePersonalInformationDto.businessName,
-      documentNumber: createcreatePersonalInformationDto.documentNumber,
-      personTypeId: createcreatePersonalInformationDto.personTypeId,
-      taxLiabilityId: createcreatePersonalInformationDto.taxLiabilityId,
-      identificationId: createcreatePersonalInformationDto.identificationId,
+      dv: createPersonalInformationDto.dv,
+      firstName: createPersonalInformationDto.firstName,
+      middleName: createPersonalInformationDto.middleName,
+      firstSurname: createPersonalInformationDto.firstSurname,
+      secondSurname: createPersonalInformationDto.secondSurname,
+      businessName: createPersonalInformationDto.businessName,
+      documentNumber: createPersonalInformationDto.documentNumber,
+      personTypeId: createPersonalInformationDto.personTypeId,
+      taxLiabilityId: createPersonalInformationDto.taxLiabilityId,
+      identificationId: createPersonalInformationDto.identificationId,
       userId,
     }, { transaction });
 
