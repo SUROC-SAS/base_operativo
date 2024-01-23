@@ -11,7 +11,6 @@ export class CreateContactInformationDto {
   phoneOne: Constructor['phoneOne'];
   phoneTwo: Constructor['phoneTwo'];
 
-
   private constructor({
     mobile,
     phoneOne,
@@ -33,6 +32,7 @@ export class CreateContactInformationDto {
       phoneOne,
       phoneTwo,
     } = response!;
+
     const dto = new CreateContactInformationDto({
       mobile,
       phoneOne,
@@ -44,7 +44,7 @@ export class CreateContactInformationDto {
 
   static getSchema(): Record<string, unknown> {
     return {
-      mobile: GENERATOR.number().required().nullable(),
+      mobile: GENERATOR.number().required(),
       phoneOne: GENERATOR.number().optional().nullable(),
       phoneTwo: GENERATOR.number().optional().nullable(),
     };
