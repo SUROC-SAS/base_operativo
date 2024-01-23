@@ -1,19 +1,30 @@
 import { UserMapper } from "../mappers";
 import { Transaction } from "sequelize";
 import { UserDataSource } from "#/domain";
+import { units } from "#/domain/interfaces";
 import { sequelize } from "#/data/postgreSQL";
 import User from "#/data/postgreSQL/models/user.model";
+import Token from "#/data/postgreSQL/models/token.model";
+import { UidAdapter } from "#/config/adapters/uid.adapter";
 import { CustomError } from "#/domain/errors/custom.error";
+import { TokenMapper } from "../mappers/user/token.mapper";
+import { MomentAdapter } from "#/config/adapters/moment.adapter";
+import TokenType from "#/data/postgreSQL/models/token-type.model";
 import PersonType from "#/data/postgreSQL/models/person-type.model";
-import { Identifications, PersonTypes } from '#/infrastructure/interfaces';
 import Identification from "#/data/postgreSQL/models/identification.model";
 import ContactInformation from "#/data/postgreSQL/models/contact-information.model";
 import { ContactInformationMapper } from "../mappers/user/contactInformation.mapper";
 import PersonalInformation from "#/data/postgreSQL/models/personal-information.model";
 import { PersonalInformationMapper } from "../mappers/user/personalInformation.mapper";
-import { CreateContactInformationDto, CreatePersonalInformationDto, CreateUserDto } from "#/domain/dtos";
+import { Identifications, PersonTypes, TokenTypeCodes } from '#/infrastructure/interfaces';
+import { CreateContactInformationDto, CreatePersonalInformationDto, CreateTokenDto, CreateUserDto } from "#/domain/dtos";
 
 export class UserDataSourceImpl implements UserDataSource {
+  constructor(
+    private readonly uidAdapter: UidAdapter,
+    private readonly momentAdapter: MomentAdapter,
+  ) { }
+
   async createUser(userDto: CreateUserDto, personalInformationDto: CreatePersonalInformationDto, contactInformationDto: CreateContactInformationDto) {
     const transaction = await sequelize.transaction({
       isolationLevel: Transaction.ISOLATION_LEVELS.READ_COMMITTED,
@@ -39,6 +50,9 @@ export class UserDataSourceImpl implements UserDataSource {
         lastAccess: userDto.lastAccess,
         emailValidate: userDto.emailValidate,
       }, { transaction });
+
+      const token = await this.createToken(user.id, transaction);
+      console.log(token);
 
       const personalInformation = await this.createPersonalInformation(personalInformationDto, user.id, transaction);
       const contactInformation = await this.createContactInformation(contactInformationDto, user.id, transaction);
@@ -147,5 +161,26 @@ export class UserDataSourceImpl implements UserDataSource {
     }, { transaction });
 
     return ContactInformationMapper(contactInformation);
+  }
+
+  private async createToken(userId: number, transaction: Transaction) {
+    const tokenType = await TokenType.findOne({ where: { code: TokenTypeCodes.CONFIRM_EMAIL }, transaction });
+
+    const [errTokenDto, createTokenDto] = CreateTokenDto.create({
+      token: this.uidAdapter.generate(18),
+      expire: this.momentAdapter.addTimes(15, units.DAY),
+      used: false,
+      tokenTypeId: tokenType!.id,
+      userId,
+    });
+
+    if (errTokenDto) throw CustomError.internal();
+
+    const token = await Token.create(
+      createTokenDto,
+      { transaction }
+    );
+
+    return TokenMapper(token);
   }
 }
