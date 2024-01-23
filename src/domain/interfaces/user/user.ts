@@ -1,16 +1,19 @@
 import { Address } from "./address";
+import { ContactInformation } from "./contactInformation";
 import { PersonalInformation } from "./personalInformation";
-import { CreateAddressDto, CreatePersonalInformationDto, CreateUserDto } from "#/domain/dtos";
+import { CreateAddressDto, CreateContactInformationDto, CreatePersonalInformationDto, CreateUserDto } from "#/domain/dtos";
 
 export interface User {
   id: number;
   email: string;
-  personalInformation?: PersonalInformation
   address?: Address
+  contactInformation?: ContactInformation;
+  personalInformation?: PersonalInformation;
 };
 
 export interface ICreateUserDtos {
   createUserDto: CreateUserDto,
   createAddressDto: CreateAddressDto,
+  createContactInformationDto: CreateContactInformationDto,
   createPersonalInformationDto: CreatePersonalInformationDto,
 }

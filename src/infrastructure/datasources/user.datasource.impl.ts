@@ -1,30 +1,33 @@
-import Identification from "#/data/postgreSQL/models/identification.model";
-import User from "#/data/postgreSQL/models/user.model";
-import { Identifications, PersonTypes } from '#/infrastructure/interfaces';
-import { sequelize } from "#/data/postgreSQL";
-import { UserDataSource } from "#/domain";
-import { CustomError } from "#/domain/errors/custom.error";
 import { UserMapper } from "../mappers";
-import { CreatePersonalInformationDto } from "#/domain/dtos/user/create-personalInformation.dto";
 import { Transaction } from "sequelize";
-import PersonType from "#/data/postgreSQL/models/person-type.model";
-import PersonalInformation from "#/data/postgreSQL/models/personal-information.model";
-import { PersonalInformationMapper } from "../mappers/user/personalInformation.mapper";
+import { UserDataSource } from "#/domain";
+import { sequelize } from "#/data/postgreSQL";
 import { ICreateUserDtos } from "#/domain/interfaces";
-import { CreateAddressDto } from "#/domain/dtos";
+import User from "#/data/postgreSQL/models/user.model";
+import State from "#/data/postgreSQL/models/state.model";
+import { CustomError } from "#/domain/errors/custom.error";
+import Country from "#/data/postgreSQL/models/country.model";
 import Address from "#/data/postgreSQL/models/address.model";
 import { AddressMapper } from "../mappers/user/address.mapper";
-import Country from "#/data/postgreSQL/models/country.model";
+import PersonType from "#/data/postgreSQL/models/person-type.model";
 import Municipality from "#/data/postgreSQL/models/municipality.model";
-import State from "#/data/postgreSQL/models/state.model";
 import { CountriesCodes } from "../interfaces/user/countries.interfaces";
+import { Identifications, PersonTypes } from '#/infrastructure/interfaces';
+import Identification from "#/data/postgreSQL/models/identification.model";
+import ContactInformation from "#/data/postgreSQL/models/contact-information.model";
+import { ContactInformationMapper } from "../mappers/user/contactInformation.mapper";
+import PersonalInformation from "#/data/postgreSQL/models/personal-information.model";
+import { PersonalInformationMapper } from "../mappers/user/personalInformation.mapper";
+import { CreateAddressDto, CreateContactInformationDto, CreatePersonalInformationDto } from "#/domain/dtos";
 
 export class UserDataSourceImpl implements UserDataSource {
   async createUser({
     createUserDto,
-    createPersonalInformationDto,
     createAddressDto,
+    createContactInformationDto,
+    createPersonalInformationDto,
   }: ICreateUserDtos) {
+
     const transaction = await sequelize.transaction({
       isolationLevel: Transaction.ISOLATION_LEVELS.READ_COMMITTED,
     });
@@ -50,12 +53,14 @@ export class UserDataSourceImpl implements UserDataSource {
         emailValidate: createUserDto.emailValidate,
       }, { transaction });
 
-      const address = await this.createAddress(createAddressDto, user.id, transaction);
       const personalInformation = await this.createPersonalInformation(createPersonalInformationDto, user.id, transaction);
-      const userMapper = UserMapper(user);
+      const contactInformation = await this.createContactInformation(createContactInformationDto, user.id, transaction);
+      const address = await this.createAddress(createAddressDto, user.id, transaction);
 
+      const userMapper = UserMapper(user);
       userMapper.address = address;
       userMapper.personalInformation = personalInformation;
+      userMapper.contactInformation = contactInformation;
 
       await transaction.commit();
       return userMapper;
@@ -182,5 +187,16 @@ export class UserDataSourceImpl implements UserDataSource {
     }, { transaction });
 
     return AddressMapper(address);
+  }
+
+  private async createContactInformation(contactInformationDto: CreateContactInformationDto, userId: number, transaction: Transaction) {
+    const contactInformation = await ContactInformation.create({
+      mobile: contactInformationDto.mobile,
+      phoneOne: contactInformationDto.phoneOne,
+      phoneTwo: contactInformationDto.phoneTwo,
+      userId,
+    }, { transaction });
+
+    return ContactInformationMapper(contactInformation);
   }
 }
