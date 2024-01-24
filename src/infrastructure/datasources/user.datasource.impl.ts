@@ -1,26 +1,36 @@
+import User from "#/data/postgreSQL/models/user.model";
+import Token from "#/data/postgreSQL/models/token.model";
+import State from "#/data/postgreSQL/models/state.model";
+import Country from "#/data/postgreSQL/models/country.model";
+import Address from "#/data/postgreSQL/models/address.model";
+import TokenType from "#/data/postgreSQL/models/token-type.model";
+import PersonType from "#/data/postgreSQL/models/person-type.model";
+import Municipality from "#/data/postgreSQL/models/municipality.model";
+import Identification from "#/data/postgreSQL/models/identification.model";
+import ContactInformation from "#/data/postgreSQL/models/contact-information.model";
+import PersonalInformation from "#/data/postgreSQL/models/personal-information.model";
 import { UserMapper } from "../mappers";
 import { Transaction } from "sequelize";
 import { UserDataSource } from "#/domain";
+import { TimeAdapter, units } from "#/domain/interfaces";
 import { sequelize } from "#/data/postgreSQL";
 import { CreateUserDtos } from "#/domain/interfaces";
-import User from "#/data/postgreSQL/models/user.model";
-import State from "#/data/postgreSQL/models/state.model";
+import { TokenMapper } from "../mappers/user/token.mapper";
 import { CustomError } from "#/domain/errors/custom.error";
-import Country from "#/data/postgreSQL/models/country.model";
-import Address from "#/data/postgreSQL/models/address.model";
 import { AddressMapper } from "../mappers/user/address.mapper";
-import PersonType from "#/data/postgreSQL/models/person-type.model";
-import Municipality from "#/data/postgreSQL/models/municipality.model";
 import { CountriesCodes } from "../interfaces/user/countries.interfaces";
-import { Identifications, PersonTypes } from '#/infrastructure/interfaces';
-import Identification from "#/data/postgreSQL/models/identification.model";
-import ContactInformation from "#/data/postgreSQL/models/contact-information.model";
 import { ContactInformationMapper } from "../mappers/user/contactInformation.mapper";
-import PersonalInformation from "#/data/postgreSQL/models/personal-information.model";
 import { PersonalInformationMapper } from "../mappers/user/personalInformation.mapper";
-import { CreateAddressDto, CreateContactInformationDto, CreatePersonalInformationDto } from "#/domain/dtos";
+import { Identifications, PersonTypes, TokenTypeCodes } from '#/infrastructure/interfaces';
+import { CreateAddressDto, CreateContactInformationDto, CreatePersonalInformationDto, CreateTokenDto } from "#/domain/dtos";
+import { UuidAdapter } from "#/domain/interfaces/adapters/uuid.adapter.interface";
 
 export class UserDataSourceImpl implements UserDataSource {
+  constructor(
+    private readonly uidAdapter: UuidAdapter,
+    private readonly momentAdapter: TimeAdapter,
+  ) { }
+
   async createUser({
     createUserDto,
     createAddressDto,
@@ -53,9 +63,10 @@ export class UserDataSourceImpl implements UserDataSource {
         emailValidate: createUserDto.emailValidate,
       }, { transaction });
 
-      const address = await this.createAddress(createAddressDto, user.id, transaction);
-      const contactInformation = await this.createContactInformation(createContactInformationDto, user.id, transaction);
+      const token = await this.createToken(user.id, transaction);
       const personalInformation = await this.createPersonalInformation(createPersonalInformationDto, user.id, transaction);
+      const contactInformation = await this.createContactInformation(createContactInformationDto, user.id, transaction);
+      const address = await this.createAddress(createAddressDto, user.id, transaction);
 
       const userMapper = UserMapper(user);
       userMapper.address = address;
@@ -197,5 +208,26 @@ export class UserDataSourceImpl implements UserDataSource {
     }, { transaction });
 
     return ContactInformationMapper(contactInformation);
+  }
+
+  private async createToken(userId: number, transaction: Transaction) {
+    const tokenType = await TokenType.findOne({ where: { code: TokenTypeCodes.CONFIRM_EMAIL }, transaction });
+
+    const [errTokenDto, createTokenDto] = CreateTokenDto.create({
+      token: this.uidAdapter.generate(18),
+      expire: this.momentAdapter.addTimes(15, units.DAY),
+      used: false,
+      tokenTypeId: tokenType!.id,
+      userId,
+    });
+
+    if (errTokenDto) throw CustomError.internal();
+
+    const token = await Token.create(
+      createTokenDto,
+      { transaction }
+    );
+
+    return TokenMapper(token);
   }
 }
