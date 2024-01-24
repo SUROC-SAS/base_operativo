@@ -1,35 +1,34 @@
-import { UserMapper } from "../mappers";
-import { Transaction } from "sequelize";
-import { UserDataSource } from "#/domain";
-import { units } from "#/domain/interfaces";
-import { sequelize } from "#/data/postgreSQL";
-import { CreateUserDtos } from "#/domain/interfaces";
 import User from "#/data/postgreSQL/models/user.model";
 import Token from "#/data/postgreSQL/models/token.model";
 import State from "#/data/postgreSQL/models/state.model";
-import { TokenMapper } from "../mappers/user/token.mapper";
-import { UidAdapter } from "#/config/adapters/uid.adapter";
-import { CustomError } from "#/domain/errors/custom.error";
 import Country from "#/data/postgreSQL/models/country.model";
 import Address from "#/data/postgreSQL/models/address.model";
-import { AddressMapper } from "../mappers/user/address.mapper";
-import { MomentAdapter } from "#/config/adapters/moment.adapter";
 import TokenType from "#/data/postgreSQL/models/token-type.model";
 import PersonType from "#/data/postgreSQL/models/person-type.model";
 import Municipality from "#/data/postgreSQL/models/municipality.model";
-import { CountriesCodes } from "../interfaces/user/countries.interfaces";
 import Identification from "#/data/postgreSQL/models/identification.model";
 import ContactInformation from "#/data/postgreSQL/models/contact-information.model";
-import { ContactInformationMapper } from "../mappers/user/contactInformation.mapper";
 import PersonalInformation from "#/data/postgreSQL/models/personal-information.model";
+import { UserMapper } from "../mappers";
+import { Transaction } from "sequelize";
+import { UserDataSource } from "#/domain";
+import { TimeAdapter, units } from "#/domain/interfaces";
+import { sequelize } from "#/data/postgreSQL";
+import { CreateUserDtos } from "#/domain/interfaces";
+import { TokenMapper } from "../mappers/user/token.mapper";
+import { CustomError } from "#/domain/errors/custom.error";
+import { AddressMapper } from "../mappers/user/address.mapper";
+import { CountriesCodes } from "../interfaces/user/countries.interfaces";
+import { ContactInformationMapper } from "../mappers/user/contactInformation.mapper";
 import { PersonalInformationMapper } from "../mappers/user/personalInformation.mapper";
 import { Identifications, PersonTypes, TokenTypeCodes } from '#/infrastructure/interfaces';
 import { CreateAddressDto, CreateContactInformationDto, CreatePersonalInformationDto, CreateTokenDto } from "#/domain/dtos";
+import { UuidAdapter } from "#/domain/interfaces/adapters/uuid.adapter.interface";
 
 export class UserDataSourceImpl implements UserDataSource {
   constructor(
-    private readonly uidAdapter: UidAdapter,
-    private readonly momentAdapter: MomentAdapter,
+    private readonly uidAdapter: UuidAdapter,
+    private readonly momentAdapter: TimeAdapter,
   ) { }
 
   async createUser({

@@ -8,3 +8,7 @@ export enum units {
   SECOND = "second",
   MILISECOND = "millisecond",
 }
+
+export interface TimeAdapter {
+  addTimes(amount: number, unit: units): Date;
+}

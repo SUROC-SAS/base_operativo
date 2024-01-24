@@ -9,7 +9,9 @@ export class UserRoutes {
   static get routes(): Router {
     const router = Router();
 
-    const database = new UserDataSourceImpl(new UidAdapter(), new MomentAdapter());
+    const uidAdapter = new UidAdapter();
+    const momentAdapter = new MomentAdapter();
+    const database = new UserDataSourceImpl(uidAdapter, momentAdapter);
     const repository = new UserRepositoryImpl(database);
     const controller = new UserController(repository);
 
