@@ -1,8 +1,8 @@
 import { handleError } from "../error";
 import { UserRepository } from "#/domain";
 import { Request, Response } from 'express';
-import { CreateUser } from "#/domain/use-cases";
-import { CreateAddressDto, CreateContactInformationDto, CreatePersonalInformationDto, CreateUserDto } from "#/domain/dtos";
+import { CreateUser, Auth } from "#/domain/use-cases";
+import { AuthDto, CreateAddressDto, CreateContactInformationDto, CreatePersonalInformationDto, CreateUserDto } from "#/domain/dtos";
 
 export class UserController {
   constructor(
@@ -33,5 +33,16 @@ export class UserController {
       .catch((err) => {
         handleError(err, res);
       });
+  }
+
+  auth = (req: Request, res: Response) => {
+    const [errAuthDto, authDto] = AuthDto.create(req.body);
+
+    if (errAuthDto) return res.status(400).json({ errAuthDto });
+
+    new Auth(this.userRepository)
+      .execute(authDto!)
+      .then((user) => res.status(201).json(user))
+      .catch((err) => handleError(err, res));
   }
 }
