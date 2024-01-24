@@ -2,7 +2,7 @@ import { handleError } from "../error";
 import { UserRepository } from "#/domain";
 import { Request, Response } from 'express';
 import { CreateUser } from "#/domain/use-cases";
-import { CreateAssignedRoleDto, CreateContactInformationDto, CreatePersonalInformationDto, CreateUserDto } from "#/domain/dtos";
+import { CreateAddressDto, CreateAssignedRoleDto, CreateContactInformationDto, CreatePersonalInformationDto, CreateUserDto } from "#/domain/dtos";
 
 export class UserController {
   constructor(
@@ -13,10 +13,10 @@ export class UserController {
     const [errUserDto, createUserDto] = CreateUserDto.create(req.body);
     const [errPersonalDto, createPersonalInformationDto] = CreatePersonalInformationDto.create(req.body?.personalInformation);
     const [errContactDto, createContactInformationDto] = CreateContactInformationDto.create(req.body?.contactInformation);
+    const [errAddressDto, createAddressDto] = CreateAddressDto.create(req.body?.address);
     const [errAssignedRoleDto, createAssignedRoleDto] = CreateAssignedRoleDto.create(req.body);
 
-    const err = errUserDto || errPersonalDto || errAssignedRoleDto || errContactDto;
-
+    const err = errUserDto || errPersonalDto || errAddressDto || errContactDto || errAssignedRoleDto;
     if (err) {
       return res.status(400).json({ err });
     }
@@ -25,6 +25,7 @@ export class UserController {
       .execute({
         createUserDto: createUserDto!,
         createAssignedRoleDto: createAssignedRoleDto!,
+        createAddressDto: createAddressDto!,
         createContactInformationDto: createContactInformationDto!,
         createPersonalInformationDto: createPersonalInformationDto!,
       })
