@@ -12,9 +12,9 @@ import PersonalInformation from "#/data/postgreSQL/models/personal-information.m
 import { UserMapper } from "../mappers";
 import { Transaction } from "sequelize";
 import { UserDataSource } from "#/domain";
-import { TimeAdapter, units } from "#/domain/interfaces";
 import { sequelize } from "#/data/postgreSQL";
 import { CreateUserDtos } from "#/domain/interfaces";
+import { TimeAdapter, units } from "#/domain/interfaces";
 import { TokenMapper } from "../mappers/user/token.mapper";
 import { CustomError } from "#/domain/errors/custom.error";
 import { AddressMapper } from "../mappers/user/address.mapper";
@@ -23,6 +23,7 @@ import { UjwtAdapter } from "#/domain/interfaces/adapters/jwt.adapter.interface"
 import { UuidAdapter } from "#/domain/interfaces/adapters/uuid.adapter.interface";
 import { ContactInformationMapper } from "../mappers/user/contactInformation.mapper";
 import { PersonalInformationMapper } from "../mappers/user/personalInformation.mapper";
+import { UbcryptAdapter } from "#/domain/interfaces/adapters/bcrypt.adapter.interface";
 import { Identifications, PersonTypes, TokenTypeCodes } from '#/infrastructure/interfaces';
 import { AuthDto, CreateAddressDto, CreateContactInformationDto, CreatePersonalInformationDto, CreateTokenDto } from "#/domain/dtos";
 
@@ -31,6 +32,7 @@ export class UserDataSourceImpl implements UserDataSource {
     private readonly uidAdapter: UuidAdapter,
     private readonly momentAdapter: TimeAdapter,
     private readonly jwtAdapter: UjwtAdapter,
+    private readonly bcryptAdapter: UbcryptAdapter,
   ) { }
 
   async auth({ email, password }: AuthDto): Promise<string> {
@@ -54,7 +56,7 @@ export class UserDataSourceImpl implements UserDataSource {
       if (!user) throw CustomError.unauthorized('Error, Ha ocurrido un error en el proceso de autenticación.');
       if (!user.emailValidate) throw CustomError.unauthorized('Error, Esta cuenta no se encuentra activada.');
 
-      const compare = await this.jwtAdapter.compare(user.password, password);
+      const compare = await this.bcryptAdapter.compare(user.password, password);
 
       if (!compare) throw CustomError.unauthorized('Error, Ha ocurrido un error en el proceso de autenticación.');
 
@@ -97,9 +99,9 @@ export class UserDataSourceImpl implements UserDataSource {
       const user = await User.create({
         email: createUserDto.email,
         active: createUserDto.active,
-        password: createUserDto.password,
         lastAccess: createUserDto.lastAccess,
         emailValidate: createUserDto.emailValidate,
+        password: this.bcryptAdapter.encrypt(createUserDto.password, 10),
       }, { transaction });
 
       await user.update({ uid: `US${user.id + 1000}` }, { transaction });
