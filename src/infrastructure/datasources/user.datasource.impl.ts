@@ -3,21 +3,28 @@ import { Transaction } from "sequelize";
 import { UserDataSource } from "#/domain";
 import { units } from "#/domain/interfaces";
 import { sequelize } from "#/data/postgreSQL";
+import { CreateUserDtos } from "#/domain/interfaces";
 import User from "#/data/postgreSQL/models/user.model";
 import Token from "#/data/postgreSQL/models/token.model";
+import State from "#/data/postgreSQL/models/state.model";
+import { TokenMapper } from "../mappers/user/token.mapper";
 import { UidAdapter } from "#/config/adapters/uid.adapter";
 import { CustomError } from "#/domain/errors/custom.error";
-import { TokenMapper } from "../mappers/user/token.mapper";
+import Country from "#/data/postgreSQL/models/country.model";
+import Address from "#/data/postgreSQL/models/address.model";
+import { AddressMapper } from "../mappers/user/address.mapper";
 import { MomentAdapter } from "#/config/adapters/moment.adapter";
 import TokenType from "#/data/postgreSQL/models/token-type.model";
 import PersonType from "#/data/postgreSQL/models/person-type.model";
+import Municipality from "#/data/postgreSQL/models/municipality.model";
+import { CountriesCodes } from "../interfaces/user/countries.interfaces";
 import Identification from "#/data/postgreSQL/models/identification.model";
 import ContactInformation from "#/data/postgreSQL/models/contact-information.model";
 import { ContactInformationMapper } from "../mappers/user/contactInformation.mapper";
 import PersonalInformation from "#/data/postgreSQL/models/personal-information.model";
 import { PersonalInformationMapper } from "../mappers/user/personalInformation.mapper";
 import { Identifications, PersonTypes, TokenTypeCodes } from '#/infrastructure/interfaces';
-import { CreateContactInformationDto, CreatePersonalInformationDto, CreateTokenDto, CreateUserDto } from "#/domain/dtos";
+import { CreateAddressDto, CreateContactInformationDto, CreatePersonalInformationDto, CreateTokenDto } from "#/domain/dtos";
 
 export class UserDataSourceImpl implements UserDataSource {
   constructor(
@@ -25,7 +32,13 @@ export class UserDataSourceImpl implements UserDataSource {
     private readonly momentAdapter: MomentAdapter,
   ) { }
 
-  async createUser(userDto: CreateUserDto, personalInformationDto: CreatePersonalInformationDto, contactInformationDto: CreateContactInformationDto) {
+  async createUser({
+    createUserDto,
+    createAddressDto,
+    createContactInformationDto,
+    createPersonalInformationDto,
+  }: CreateUserDtos) {
+
     const transaction = await sequelize.transaction({
       isolationLevel: Transaction.ISOLATION_LEVELS.READ_COMMITTED,
     });
@@ -33,7 +46,7 @@ export class UserDataSourceImpl implements UserDataSource {
     try {
       const userExit = await User.findOne({
         where: {
-          email: userDto.email
+          email: createUserDto.email
         },
         transaction,
         lock: Transaction.LOCK.UPDATE,
@@ -44,19 +57,20 @@ export class UserDataSourceImpl implements UserDataSource {
       }
 
       const user = await User.create({
-        email: userDto.email,
-        active: userDto.active,
-        password: userDto.password,
-        lastAccess: userDto.lastAccess,
-        emailValidate: userDto.emailValidate,
+        email: createUserDto.email,
+        active: createUserDto.active,
+        password: createUserDto.password,
+        lastAccess: createUserDto.lastAccess,
+        emailValidate: createUserDto.emailValidate,
       }, { transaction });
 
       const token = await this.createToken(user.id, transaction);
-      console.log(token);
+      const personalInformation = await this.createPersonalInformation(createPersonalInformationDto, user.id, transaction);
+      const contactInformation = await this.createContactInformation(createContactInformationDto, user.id, transaction);
+      const address = await this.createAddress(createAddressDto, user.id, transaction);
 
-      const personalInformation = await this.createPersonalInformation(personalInformationDto, user.id, transaction);
-      const contactInformation = await this.createContactInformation(contactInformationDto, user.id, transaction);
       const userMapper = UserMapper(user);
+      userMapper.address = address;
       userMapper.personalInformation = personalInformation;
       userMapper.contactInformation = contactInformation;
 
@@ -150,6 +164,40 @@ export class UserDataSourceImpl implements UserDataSource {
     }, { transaction });
 
     return PersonalInformationMapper(personalInformation);
+  }
+
+  private async createAddress(createAddressDto: CreateAddressDto, userId: number, transaction: Transaction) {
+    const country = await Country.findByPk(createAddressDto.countryId, { transaction });
+    if (!country) throw CustomError.badRequest('Pais no encontrado.');
+
+    let error: string | null = null;
+    const national = country.code === CountriesCodes.COLOMBIA;
+    if (national) {
+      error = createAddressDto.validateNational();
+
+      const [state, municipality] = await Promise.all([
+        State.findByPk(createAddressDto.stateId, { transaction }),
+        Municipality.findByPk(createAddressDto.municipalityId, { transaction }),
+      ]);
+
+      if (!state || !municipality) error += `${!state ? ', Departamento no encontrado.' : ''}${!municipality ? ', Municipio no encontrado.' : ''}`
+    } else {
+      error = createAddressDto.validateForeign();
+    }
+
+    if (error) throw CustomError.badRequest(error);
+
+    const address = await Address.create({
+      address: createAddressDto.address,
+      stateId: createAddressDto.stateId,
+      countryId: createAddressDto.countryId,
+      stateName: createAddressDto.stateName,
+      postalCode: createAddressDto.postalCode,
+      municipalityId: createAddressDto.municipalityId,
+      userId,
+    }, { transaction });
+
+    return AddressMapper(address);
   }
 
   private async createContactInformation(contactInformationDto: CreateContactInformationDto, userId: number, transaction: Transaction) {

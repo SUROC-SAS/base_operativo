@@ -1,6 +1,5 @@
-import { User } from "../interfaces";
-import { CreateContactInformationDto, CreatePersonalInformationDto, CreateUserDto } from "../dtos";
+import { CreateUserDtos, User } from "../interfaces";
 
 export abstract class UserDataSource {
-  abstract createUser(createUserDto: CreateUserDto, personalInformationDto: CreatePersonalInformationDto, contactInformationDto: CreateContactInformationDto): Promise<User>;
+  abstract createUser(createUserDtos: CreateUserDtos): Promise<User>;
 }
