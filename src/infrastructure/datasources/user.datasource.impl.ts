@@ -12,23 +12,25 @@ import PersonalInformation from "#/data/postgreSQL/models/personal-information.m
 import { UserMapper } from "../mappers";
 import { Transaction } from "sequelize";
 import { UserDataSource } from "#/domain";
-import { TimeAdapter, units } from "#/domain/interfaces";
 import { sequelize } from "#/data/postgreSQL";
 import { CreateUserDtos } from "#/domain/interfaces";
+import { TimeAdapter, units } from "#/domain/interfaces";
 import { TokenMapper } from "../mappers/user/token.mapper";
 import { CustomError } from "#/domain/errors/custom.error";
 import { AddressMapper } from "../mappers/user/address.mapper";
+import { BcryptAdapter } from "#/config/adapters/bcrypt.adapter";
 import { CountriesCodes } from "../interfaces/user/countries.interfaces";
+import { UuidAdapter } from "#/domain/interfaces/adapters/uuid.adapter.interface";
 import { ContactInformationMapper } from "../mappers/user/contactInformation.mapper";
 import { PersonalInformationMapper } from "../mappers/user/personalInformation.mapper";
 import { Identifications, PersonTypes, TokenTypeCodes } from '#/infrastructure/interfaces';
 import { CreateAddressDto, CreateContactInformationDto, CreatePersonalInformationDto, CreateTokenDto } from "#/domain/dtos";
-import { UuidAdapter } from "#/domain/interfaces/adapters/uuid.adapter.interface";
 
 export class UserDataSourceImpl implements UserDataSource {
   constructor(
     private readonly uidAdapter: UuidAdapter,
     private readonly momentAdapter: TimeAdapter,
+    private readonly bcryptAdapter: BcryptAdapter,
   ) { }
 
   async createUser({
@@ -58,9 +60,9 @@ export class UserDataSourceImpl implements UserDataSource {
       const user = await User.create({
         email: createUserDto.email,
         active: createUserDto.active,
-        password: createUserDto.password,
         lastAccess: createUserDto.lastAccess,
         emailValidate: createUserDto.emailValidate,
+        password: this.bcryptAdapter.encrypt(createUserDto.password, 10),
       }, { transaction });
 
       const token = await this.createToken(user.id, transaction);
