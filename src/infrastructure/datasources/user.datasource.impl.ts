@@ -18,11 +18,11 @@ import { TimeAdapter, units } from "#/domain/interfaces";
 import { TokenMapper } from "../mappers/user/token.mapper";
 import { CustomError } from "#/domain/errors/custom.error";
 import { AddressMapper } from "../mappers/user/address.mapper";
-import { BcryptAdapter } from "#/config/adapters/bcrypt.adapter";
 import { CountriesCodes } from "../interfaces/user/countries.interfaces";
 import { UuidAdapter } from "#/domain/interfaces/adapters/uuid.adapter.interface";
 import { ContactInformationMapper } from "../mappers/user/contactInformation.mapper";
 import { PersonalInformationMapper } from "../mappers/user/personalInformation.mapper";
+import { UbcryptAdapter } from "#/domain/interfaces/adapters/bcrypt.adapter.interface";
 import { Identifications, PersonTypes, TokenTypeCodes } from '#/infrastructure/interfaces';
 import { CreateAddressDto, CreateContactInformationDto, CreatePersonalInformationDto, CreateTokenDto } from "#/domain/dtos";
 
@@ -30,7 +30,7 @@ export class UserDataSourceImpl implements UserDataSource {
   constructor(
     private readonly uidAdapter: UuidAdapter,
     private readonly momentAdapter: TimeAdapter,
-    private readonly bcryptAdapter: BcryptAdapter,
+    private readonly bcryptAdapter: UbcryptAdapter,
   ) { }
 
   async createUser({
