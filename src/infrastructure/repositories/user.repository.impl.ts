@@ -1,15 +1,10 @@
-import { TransactionAdapter } from "#/config/transaction";
 import { UserDataSource, UserRepository } from "#/domain";
-import { CreateUserDto } from "#/domain/dtos";
+import { CreateUserDtos, User } from "#/domain/interfaces";
 
 export class UserRepositoryImpl implements UserRepository {
   constructor(private readonly userDataSource: UserDataSource) { }
 
-  async createUser(createUserDto: CreateUserDto): Promise<any> {
-    return this.userDataSource.createUser(createUserDto);
-  }
-
-  async createPersonalInformation(createPersonalInformationDto: any, transaction: TransactionAdapter): Promise<any> {
-    return this.userDataSource.createPersonalInformation(createPersonalInformationDto, transaction);
+  async createUser(createUserDtos: CreateUserDtos): Promise<User> {
+    return this.userDataSource.createUser(createUserDtos);
   }
 }

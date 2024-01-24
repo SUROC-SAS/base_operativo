@@ -1,9 +1,9 @@
-import { CreateUserDto } from "#/domain/dtos";
+import { CreateUserDtos, User } from "#/domain/interfaces";
 import { UserRepository } from "#/domain/repositories/user.repository";
 import EmailService from "#/presentation/services/mail.service";
 
 interface CreateUserUseCase {
-  execute(registerUserDto: CreateUserDto, emailService: EmailService): Promise<unknown>;
+  execute(createUserDtos: CreateUserDtos): Promise<User>;
 }
 
 export class CreateUser implements CreateUserUseCase {
@@ -12,12 +12,8 @@ export class CreateUser implements CreateUserUseCase {
     private readonly userRepository: UserRepository,
   ) { }
 
-  async execute(registerUserDto: CreateUserDto): Promise<unknown> {
-    const user = await this.userRepository.createUser(registerUserDto);
-
-    ///use service para enviar email
-    //  this.emailService.sendEmail();
-
+  async execute(createUserDtos: CreateUserDtos): Promise<User> {
+    const user = await this.userRepository.createUser(createUserDtos);
     return user;
   }
-}
+} 

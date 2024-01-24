@@ -1,58 +1,48 @@
-
 import {
   Model,
   DataTypes,
   CreationOptional,
   InferAttributes,
   InferCreationAttributes,
+  HasManyGetAssociationsMixin,
 } from 'sequelize';
+import State from './state.model';
+import Address from './address.model';
 import { sequelize } from '../postgreSQL-database';
 
-export default class User extends Model<InferAttributes<User>, InferCreationAttributes<User>> {
+export default class Country extends Model<InferAttributes<Country>, InferCreationAttributes<Country>> {
   declare id: CreationOptional<number>;
-  declare uid: CreationOptional<string>;
-  declare email: string;
-  declare password: string;
-  declare emailValidate: boolean;
-  declare active: boolean;
-  declare lastAccess?: CreationOptional<Date> | null;
+  declare name: string;
+  declare code: string;
   declare createdAt: CreationOptional<Date>;
   declare updatedAt: CreationOptional<Date>;
   declare deletedAt: CreationOptional<Date>;
+
+  declare addresses?: Address[];
+  declare getAddresses: HasManyGetAssociationsMixin<Address>;
+
+  declare states?: State[];
+  declare getStates: HasManyGetAssociationsMixin<State>;
+
+  static associate(): void {
+    Country.hasMany(State, { as: 'states', sourceKey: 'id', foreignKey: 'countryId' });
+    Country.hasMany(Address, { as: 'addresses', sourceKey: 'id', foreignKey: 'countryId' });
+  }
 }
 
-User.init(
+Country.init(
   {
     id: {
       type: DataTypes.INTEGER,
       autoIncrement: true,
       primaryKey: true,
     },
-    uid: {
-      type: DataTypes.STRING,
-      allowNull: true,
-      unique: true,
-    },
-    email: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      unique: true,
-    },
-    password: {
+    name: {
       type: DataTypes.STRING,
       allowNull: false,
     },
-    emailValidate: {
-      type: DataTypes.BOOLEAN,
-      defaultValue: false,
-    },
-    lastAccess: {
-      type: DataTypes.DATE,
-      allowNull: true,
-    },
-    active: {
-      type: DataTypes.BOOLEAN,
-      defaultValue: true,
+    code: {
+      type: DataTypes.STRING,
       allowNull: false,
     },
     createdAt: {
@@ -72,9 +62,6 @@ User.init(
   {
     sequelize,
     paranoid: true,
-    tableName: 'Users',
-    defaultScope: {
-      attributes: { exclude: ['password'] },
-    },
+    tableName: 'Countries',
   }
 );
