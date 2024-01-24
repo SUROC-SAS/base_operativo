@@ -11,7 +11,7 @@ export interface User {
   personalInformation?: PersonalInformation;
 };
 
-export interface ICreateUserDtos {
+export interface CreateUserDtos {
   createUserDto: CreateUserDto,
   createAddressDto: CreateAddressDto,
   createContactInformationDto: CreateContactInformationDto,

@@ -36,7 +36,6 @@ export class CreateAddressDto {
 
   static create(object: Record<string, unknown>): [string?, CreateAddressDto?] {
     const [error, response] = Validator.validateObject<CreateAddressDto>(this.getSchema(), object);
-
     if (error) return [error];
 
     const {

@@ -2,7 +2,7 @@ import { UserMapper } from "../mappers";
 import { Transaction } from "sequelize";
 import { UserDataSource } from "#/domain";
 import { sequelize } from "#/data/postgreSQL";
-import { ICreateUserDtos } from "#/domain/interfaces";
+import { CreateUserDtos } from "#/domain/interfaces";
 import User from "#/data/postgreSQL/models/user.model";
 import State from "#/data/postgreSQL/models/state.model";
 import { CustomError } from "#/domain/errors/custom.error";
@@ -26,7 +26,7 @@ export class UserDataSourceImpl implements UserDataSource {
     createAddressDto,
     createContactInformationDto,
     createPersonalInformationDto,
-  }: ICreateUserDtos) {
+  }: CreateUserDtos) {
 
     const transaction = await sequelize.transaction({
       isolationLevel: Transaction.ISOLATION_LEVELS.READ_COMMITTED,
@@ -53,9 +53,9 @@ export class UserDataSourceImpl implements UserDataSource {
         emailValidate: createUserDto.emailValidate,
       }, { transaction });
 
-      const personalInformation = await this.createPersonalInformation(createPersonalInformationDto, user.id, transaction);
-      const contactInformation = await this.createContactInformation(createContactInformationDto, user.id, transaction);
       const address = await this.createAddress(createAddressDto, user.id, transaction);
+      const contactInformation = await this.createContactInformation(createContactInformationDto, user.id, transaction);
+      const personalInformation = await this.createPersonalInformation(createPersonalInformationDto, user.id, transaction);
 
       const userMapper = UserMapper(user);
       userMapper.address = address;
@@ -156,7 +156,6 @@ export class UserDataSourceImpl implements UserDataSource {
 
   private async createAddress(createAddressDto: CreateAddressDto, userId: number, transaction: Transaction) {
     const country = await Country.findByPk(createAddressDto.countryId, { transaction });
-
     if (!country) throw CustomError.badRequest('Pais no encontrado.');
 
     let error: string | null = null;
