@@ -15,7 +15,7 @@ export class AuthRoutes {
     const repository = new AuthRepositoryImpl(database);
     const controller = new AuthController(repository);
 
-    router.post('/auth', controller.auth);
+    router.post('/', controller.auth);
     return router;
   }
 }
