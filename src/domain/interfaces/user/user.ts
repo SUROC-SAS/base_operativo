@@ -5,6 +5,7 @@ import { CreateAddressDto, CreateContactInformationDto, CreatePersonalInformatio
 
 export interface User {
   id: number;
+  uid: string;
   email: string;
   address?: Address;
   contactInformation?: ContactInformation;

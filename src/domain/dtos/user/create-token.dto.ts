@@ -48,8 +48,8 @@ export class CreateTokenDto {
       expire: GENERATOR.date().required(),
       token: GENERATOR.string().required(),
       userId: GENERATOR.number().positive().required(),
-      tokenTypeId: GENERATOR.string().email().required(),
       used: GENERATOR.boolean().required().default(false),
+      tokenTypeId: GENERATOR.number().positive().required(),
     };
   }
 }
