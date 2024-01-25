@@ -15,13 +15,7 @@ export class CreateTokenDto {
   userId: Constructor['userId'];
   tokenTypeId: Constructor['tokenTypeId'];
 
-  private constructor({
-    used,
-    token,
-    expire,
-    userId,
-    tokenTypeId,
-  }: Constructor) {
+  private constructor({ used, token, expire, userId, tokenTypeId }: Constructor) {
     this.used = used;
     this.token = token;
     this.userId = userId;
@@ -35,20 +29,18 @@ export class CreateTokenDto {
       return [error];
     }
 
-    const { used,
-      token,
-      expire,
-      userId,
-      tokenTypeId,
-    } = response!;
+    const { used, token, expire, userId, tokenTypeId } = response!;
 
-    return [undefined, new CreateTokenDto({
-      used,
-      token,
-      expire,
-      userId,
-      tokenTypeId,
-    })];
+    return [
+      undefined,
+      new CreateTokenDto({
+        used,
+        token,
+        expire,
+        userId,
+        tokenTypeId,
+      }),
+    ];
   }
 
   static getSchema(): Record<string, unknown> {
@@ -58,6 +50,6 @@ export class CreateTokenDto {
       userId: GENERATOR.number().positive().required(),
       tokenTypeId: GENERATOR.string().email().required(),
       used: GENERATOR.boolean().required().default(false),
-    }
+    };
   }
 }

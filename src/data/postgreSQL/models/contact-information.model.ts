@@ -9,7 +9,10 @@ import {
 import User from './user.model';
 import { sequelize } from '../postgreSQL-database';
 
-export default class ContactInformation extends Model<InferAttributes<ContactInformation>, InferCreationAttributes<ContactInformation>> {
+export default class ContactInformation extends Model<
+  InferAttributes<ContactInformation>,
+  InferCreationAttributes<ContactInformation>
+> {
   declare id: CreationOptional<number>;
   declare mobile: number;
   declare phoneOne: CreationOptional<number>;

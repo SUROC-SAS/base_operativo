@@ -55,7 +55,18 @@ export class CreatePersonalInformationDto {
       return [error];
     }
 
-    const { dv, firstName, middleName, firstSurname, secondSurname, businessName, documentNumber, personTypeId, taxLiabilityId, identificationId } = response!;
+    const {
+      dv,
+      firstName,
+      middleName,
+      firstSurname,
+      secondSurname,
+      businessName,
+      documentNumber,
+      personTypeId,
+      taxLiabilityId,
+      identificationId,
+    } = response!;
     const dto = new CreatePersonalInformationDto({
       dv,
       firstName,
@@ -88,7 +99,7 @@ export class CreatePersonalInformationDto {
   }
 
   validateNit(): string | null {
-    let error: string[] = [];
+    const error: string[] = [];
     if (!this.dv) {
       error.push('Missing dv');
     }
@@ -114,7 +125,7 @@ export class CreatePersonalInformationDto {
   }
 
   validateForeign(): string | null {
-    let error: string[] = [];
+    const error: string[] = [];
     if (!this.businessName) {
       error.push('Missing businessName');
     }
@@ -128,7 +139,7 @@ export class CreatePersonalInformationDto {
   }
 
   validateNational(): string | null {
-    let error: string[] = [];
+    const error: string[] = [];
     if (!this.firstName) {
       error.push('Missing firstName');
     }

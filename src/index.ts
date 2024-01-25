@@ -1,6 +1,6 @@
-import { envs } from "./config";
-import { initModels } from "./data/postgreSQL";
-import { Server } from "./presentation/server";
+import { envs } from './config';
+import { initModels } from './data/postgreSQL';
+import { Server } from './presentation/server';
 
 (() => {
   main();

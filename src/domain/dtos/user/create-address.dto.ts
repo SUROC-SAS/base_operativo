@@ -9,7 +9,6 @@ interface Constructor {
   municipalityId?: number;
 }
 
-
 export class CreateAddressDto {
   address: Constructor['address'];
   stateId: Constructor['stateId'];
@@ -18,14 +17,7 @@ export class CreateAddressDto {
   postalCode: Constructor['postalCode'];
   municipalityId: Constructor['municipalityId'];
 
-  private constructor({
-    address,
-    stateId,
-    countryId,
-    stateName,
-    postalCode,
-    municipalityId,
-  }: Constructor) {
+  private constructor({ address, stateId, countryId, stateName, postalCode, municipalityId }: Constructor) {
     this.stateId = stateId;
     this.address = address;
     this.postalCode = postalCode;
@@ -38,23 +30,19 @@ export class CreateAddressDto {
     const [error, response] = Validator.validateObject<CreateAddressDto>(this.getSchema(), object);
     if (error) return [error];
 
-    const {
-      address,
-      stateId,
-      countryId,
-      stateName,
-      postalCode,
-      municipalityId,
-    } = response!;
+    const { address, stateId, countryId, stateName, postalCode, municipalityId } = response!;
 
-    return [undefined, new CreateAddressDto({
-      address,
-      stateId,
-      countryId,
-      stateName,
-      postalCode,
-      municipalityId,
-    })];
+    return [
+      undefined,
+      new CreateAddressDto({
+        address,
+        stateId,
+        countryId,
+        stateName,
+        postalCode,
+        municipalityId,
+      }),
+    ];
   }
 
   static getSchema = (): Record<string, unknown> => ({
@@ -63,11 +51,11 @@ export class CreateAddressDto {
     stateName: GENERATOR.string().trim().nullable().default(null),
     countryId: GENERATOR.string().trim().nullable().default(null),
     postalCode: GENERATOR.string().trim().nullable().default(null),
-    municipalityId: GENERATOR.string().trim().nullable().default(null)
+    municipalityId: GENERATOR.string().trim().nullable().default(null),
   });
 
   validateForeign(): string | null {
-    let error: string[] = [];
+    const error: string[] = [];
     if (!this.address) error.push('Missing address');
     if (!this.stateName) error.push('Missing stateName');
     if (!this.countryId) error.push('Missing countryId');
@@ -81,7 +69,7 @@ export class CreateAddressDto {
   }
 
   validateNational(): string | null {
-    let error: string[] = [];
+    const error: string[] = [];
     if (!this.address) error.push('Missing address');
     if (!this.postalCode) error.push('Missing postalCode');
     if (!this.stateName) error.push('Missing stateName');

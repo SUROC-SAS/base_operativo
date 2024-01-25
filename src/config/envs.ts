@@ -9,4 +9,4 @@ export const envs = {
   DB_HOSTNAME: get('DB_HOSTNAME').required().asString(),
   DB_PORT: get('DB_PORT').required().asPortNumber(),
   DB_MIGRATE_STORAGE: get('DB_MIGRATE_STORAGE').required().asString(),
-}
+};

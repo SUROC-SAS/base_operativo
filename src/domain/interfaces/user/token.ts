@@ -1,5 +1,5 @@
-import { User } from "./user";
-import { TokenType } from "./token-type";
+import { User } from './user';
+import { TokenType } from './token-type';
 
 export interface Token {
   id: number;
@@ -10,7 +10,7 @@ export interface Token {
   tokenTypeId: number;
   user?: User;
   tokenType?: TokenType;
-};
+}
 
 export interface CreateToken {
   token: string;
@@ -18,4 +18,4 @@ export interface CreateToken {
   expire: Date;
   userId: number;
   tokenTypeId: number;
-};
+}

@@ -48,4 +48,4 @@ export const initModels = () => {
     .forEach((model) => model.associate(models));
 
   return models;
-}
+};

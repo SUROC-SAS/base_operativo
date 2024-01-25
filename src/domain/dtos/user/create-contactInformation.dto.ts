@@ -11,11 +11,7 @@ export class CreateContactInformationDto {
   phoneOne: Constructor['phoneOne'];
   phoneTwo: Constructor['phoneTwo'];
 
-  private constructor({
-    mobile,
-    phoneOne,
-    phoneTwo,
-  }: Constructor) {
+  private constructor({ mobile, phoneOne, phoneTwo }: Constructor) {
     this.mobile = mobile;
     this.phoneOne = phoneOne;
     this.phoneTwo = phoneTwo;
@@ -27,11 +23,7 @@ export class CreateContactInformationDto {
       return [error];
     }
 
-    const {
-      mobile,
-      phoneOne,
-      phoneTwo,
-    } = response!;
+    const { mobile, phoneOne, phoneTwo } = response!;
 
     const dto = new CreateContactInformationDto({
       mobile,

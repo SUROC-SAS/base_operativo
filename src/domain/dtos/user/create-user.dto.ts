@@ -15,13 +15,7 @@ export class CreateUserDto {
   lastAccess: Constructor['lastAccess'];
   emailValidate: Constructor['emailValidate'];
 
-  private constructor({
-    email,
-    password,
-    active = true,
-    lastAccess = null,
-    emailValidate = false,
-  }: Constructor) {
+  private constructor({ email, password, active = true, lastAccess = null, emailValidate = false }: Constructor) {
     this.email = email;
     this.active = active;
     this.password = password;
@@ -36,18 +30,21 @@ export class CreateUserDto {
     }
 
     const { email, password } = response!;
-    return [undefined, new CreateUserDto({
-      email,
-      password,
-      active: true,
-      emailValidate: false,
-    })];
+    return [
+      undefined,
+      new CreateUserDto({
+        email,
+        password,
+        active: true,
+        emailValidate: false,
+      }),
+    ];
   }
 
   static getSchema(): Record<string, unknown> {
     return {
       email: GENERATOR.string().email().required(),
       password: GENERATOR.string().min(8).required(),
-    }
+    };
   }
 }

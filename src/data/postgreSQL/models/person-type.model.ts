@@ -1,10 +1,4 @@
-import {
-  Model,
-  DataTypes,
-  CreationOptional,
-  InferAttributes,
-  InferCreationAttributes,
-} from 'sequelize';
+import { Model, DataTypes, CreationOptional, InferAttributes, InferCreationAttributes } from 'sequelize';
 import { sequelize } from '../postgreSQL-database';
 import PersonalInformation from './personal-information.model';
 

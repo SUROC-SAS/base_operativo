@@ -55,12 +55,12 @@ Address.init(
     postalCode: {
       type: DataTypes.STRING,
       allowNull: true,
-      defaultValue: null
+      defaultValue: null,
     },
     stateName: {
       type: DataTypes.STRING,
       allowNull: true,
-      defaultValue: null
+      defaultValue: null,
     },
     municipalityId: {
       type: DataTypes.INTEGER,
@@ -69,7 +69,7 @@ Address.init(
         key: 'id',
         model: Municipality,
       },
-      defaultValue: null
+      defaultValue: null,
     },
     stateId: {
       type: DataTypes.INTEGER,
@@ -78,7 +78,7 @@ Address.init(
         key: 'id',
         model: State,
       },
-      defaultValue: null
+      defaultValue: null,
     },
     countryId: {
       type: DataTypes.INTEGER,

@@ -1,13 +1,11 @@
-import { handleError } from "../error";
-import { UserRepository } from "#/domain";
+import { handleError } from '../error';
+import { UserRepository } from '#/domain';
 import { Request, Response } from 'express';
-import { CreateUser } from "#/domain/use-cases";
-import { CreateAddressDto, CreateContactInformationDto, CreatePersonalInformationDto, CreateUserDto } from "#/domain/dtos";
+import { CreateUser } from '#/domain/use-cases';
+import { CreateAddressDto, CreateContactInformationDto, CreatePersonalInformationDto, CreateUserDto } from '#/domain/dtos';
 
 export class UserController {
-  constructor(
-    private readonly userRepository: UserRepository,
-  ) { }
+  constructor(private readonly userRepository: UserRepository) {}
 
   createUser = (req: Request, res: Response) => {
     const [errUserDto, createUserDto] = CreateUserDto.create(req.body);
@@ -33,5 +31,5 @@ export class UserController {
       .catch((err) => {
         handleError(err, res);
       });
-  }
+  };
 }

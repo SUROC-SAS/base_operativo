@@ -1,4 +1,3 @@
-
 import {
   Model,
   DataTypes,
@@ -13,7 +12,10 @@ import TaxLiability from './tax-liability.model';
 import Identification from './identification.model';
 import { sequelize } from '../postgreSQL-database';
 
-export default class PersonalInformation extends Model<InferAttributes<PersonalInformation>, InferCreationAttributes<PersonalInformation>> {
+export default class PersonalInformation extends Model<
+  InferAttributes<PersonalInformation>,
+  InferCreationAttributes<PersonalInformation>
+> {
   declare id: CreationOptional<number>;
   declare dv: CreationOptional<number>;
   declare firstName: CreationOptional<string>;
