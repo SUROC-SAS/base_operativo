@@ -1,21 +1,19 @@
 import jwt from 'jsonwebtoken';
 import { envs } from '../envs';
-import { User } from '#/domain/interfaces';
-import { UjwtAdapter } from '#/domain/interfaces/adapters/jwt.adapter.interface';
+import { JWTAdapter } from '#/domain/interfaces/adapters/jwt.adapter.interface';
 
 const { SECRET } = envs;
-
-export class JwtAdapter implements UjwtAdapter {
-  generate(user: User) {
+export class JwtAdapter implements JWTAdapter {
+  generate(data: Record<string, unknown>, duration: string = '1y') {
     const token = jwt.sign(
       {
-        uid: user.uid,
-        email: user.email.toLocaleLowerCase(),
+        uid: data.uid,
+        email: (<string>data?.email)?.toLocaleLowerCase(),
       },
       SECRET,
       {
         algorithm: 'HS256',
-        expiresIn: '1y',
+        expiresIn: duration,
       }
     );
 

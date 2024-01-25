@@ -29,8 +29,8 @@ export class UserDataSourceImpl implements UserDataSource {
   constructor(
     private readonly uidAdapter: UuidAdapter,
     private readonly momentAdapter: TimeAdapter,
-    private readonly bcryptAdapter: UbcryptAdapter,
-  ) { }
+    private readonly bcryptAdapter: UbcryptAdapter
+  ) {}
 
   async createUser({
     createUserDto,

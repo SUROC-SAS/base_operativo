@@ -1,13 +1,11 @@
-import { handleError } from "../error";
-import { AuthDto } from "#/domain/dtos";
-import { AuthRepository } from "#/domain";
-import { Auth } from "#/domain/use-cases";
+import { handleError } from '../error';
+import { AuthDto } from '#/domain/dtos';
+import { AuthRepository } from '#/domain';
+import { Auth } from '#/domain/use-cases';
 import { Request, Response } from 'express';
 
 export class AuthController {
-  constructor(
-    private readonly authRepository: AuthRepository,
-  ) { }
+  constructor(private readonly authRepository: AuthRepository) { }
 
   auth = (req: Request, res: Response) => {
     const [errAuthDto, authDto] = AuthDto.create(req.body);
@@ -15,7 +13,7 @@ export class AuthController {
 
     new Auth(this.authRepository)
       .execute(authDto!)
-      .then((user) => res.status(201).json(user))
+      .then((response) => res.status(201).json(response))
       .catch((err) => handleError(err, res));
-  }
+  };
 }

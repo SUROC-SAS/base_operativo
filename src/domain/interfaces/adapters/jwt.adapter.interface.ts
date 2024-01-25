@@ -1,5 +1,3 @@
-import { User } from "../user/user";
-
-export interface UjwtAdapter {
-  generate(user: User): string;
+export interface JWTAdapter {
+  generate(user: Record<string, unknown>, duration?: string): string;
 }

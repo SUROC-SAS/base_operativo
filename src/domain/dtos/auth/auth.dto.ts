@@ -9,10 +9,7 @@ export class AuthDto {
   email: Constructor['email'];
   password: Constructor['password'];
 
-  private constructor({
-    email,
-    password,
-  }: Constructor) {
+  private constructor({ email, password }: Constructor) {
     this.email = email;
     this.password = password;
   }
@@ -24,16 +21,19 @@ export class AuthDto {
     }
 
     const { email, password } = response!;
-    return [undefined, new AuthDto({
-      email,
-      password,
-    })];
+    return [
+      undefined,
+      new AuthDto({
+        email,
+        password,
+      }),
+    ];
   }
 
   static getSchema(): Record<string, unknown> {
     return {
       email: GENERATOR.string().email().required(),
       password: GENERATOR.string().min(8).required(),
-    }
+    };
   }
 }

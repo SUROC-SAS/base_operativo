@@ -1,10 +1,10 @@
-import { AuthDto } from "#/domain/dtos";
-import { AuthDataSource, AuthRepository } from "#/domain";
+import { AuthDto } from '#/domain/dtos';
+import { AuthDataSource, AuthRepository } from '#/domain';
 
 export class AuthRepositoryImpl implements AuthRepository {
-  constructor(private readonly userDataSource: AuthDataSource) { }
+  constructor(private readonly authDataSource: AuthDataSource) { }
 
   async auth(authDto: AuthDto): Promise<string> {
-    return this.userDataSource.auth(authDto);
+    return this.authDataSource.auth(authDto);
   }
 }
