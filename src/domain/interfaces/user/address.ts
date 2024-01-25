@@ -6,4 +6,4 @@ export interface Address {
   stateName?: string;
   postalCode: string;
   municipalityId?: number;
-};
+}

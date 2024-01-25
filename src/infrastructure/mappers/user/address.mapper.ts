@@ -1,19 +1,11 @@
-import { Address } from "#/domain/interfaces";
-import { CustomError } from "#/domain/errors/custom.error";
+import { Address } from '#/domain/interfaces';
+import { CustomError } from '#/domain/errors/custom.error';
 
 export const AddressMapper = (model: Record<string, any>): Address => {
-  const {
-    id,
-    address,
-    stateId,
-    countryId,
-    stateName,
-    postalCode,
-    municipalityId,
-  } = model;
+  const { id, address, stateId, countryId, stateName, postalCode, municipalityId } = model;
 
   if (!id) {
-    throw CustomError.badRequest("Address id is required");
+    throw CustomError.badRequest('Address id is required');
   }
 
   return {
@@ -25,4 +17,4 @@ export const AddressMapper = (model: Record<string, any>): Address => {
     postalCode,
     municipalityId,
   };
-}
+};

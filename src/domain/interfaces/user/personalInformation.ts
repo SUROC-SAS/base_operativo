@@ -10,4 +10,4 @@ export interface PersonalInformation {
   identificationId: number;
   taxLiabilityId: number;
   personTypeId: number;
-};
+}

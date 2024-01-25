@@ -10,7 +10,10 @@ import User from './user.model';
 import Municipality from './municipality.model';
 import { sequelize } from '../postgreSQL-database';
 
-export default class AssignedMunicipality extends Model<InferAttributes<AssignedMunicipality>, InferCreationAttributes<AssignedMunicipality>> {
+export default class AssignedMunicipality extends Model<
+  InferAttributes<AssignedMunicipality>,
+  InferCreationAttributes<AssignedMunicipality>
+> {
   declare id: CreationOptional<number>;
   declare userId: number;
   declare municipalityId: number;

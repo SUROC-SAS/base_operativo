@@ -3,4 +3,4 @@ export interface ContactInformation {
   mobile: number;
   phoneOne?: number;
   phoneTwo?: number;
-};
+}

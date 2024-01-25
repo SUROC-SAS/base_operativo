@@ -19,6 +19,10 @@ export class Validator {
   }
 
   static validateArray<T = Array<unknown>>(schema: ValidateArray<T>, input: T): [string?, T?] {
+    /**
+     * @todo Implement this method
+     */
+    console.log(schema, input);
     return [];
   }
 }

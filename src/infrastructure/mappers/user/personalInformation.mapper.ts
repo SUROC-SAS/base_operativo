@@ -1,5 +1,5 @@
-import { CustomError } from "#/domain/errors/custom.error";
-import { PersonalInformation } from "#/domain/interfaces/user/personalInformation";
+import { CustomError } from '#/domain/errors/custom.error';
+import { PersonalInformation } from '#/domain/interfaces/user/personalInformation';
 
 export const PersonalInformationMapper = (model: Record<string, any>): PersonalInformation => {
   const {
@@ -17,7 +17,7 @@ export const PersonalInformationMapper = (model: Record<string, any>): PersonalI
   } = model;
 
   if (!id) {
-    throw CustomError.badRequest("User id is required");
+    throw CustomError.badRequest('User id is required');
   }
 
   return {

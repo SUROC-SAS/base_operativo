@@ -1,5 +1,5 @@
 import { Response } from 'express';
-import { CustomError } from "#/domain/errors/custom.error";
+import { CustomError } from '#/domain/errors/custom.error';
 
 export const handleError = (error: unknown, res: Response) => {
   if (error instanceof CustomError) {
@@ -8,4 +8,4 @@ export const handleError = (error: unknown, res: Response) => {
 
   console.log(error);
   return res.status(500).json({ error: 'Internal server error' });
-}
+};
