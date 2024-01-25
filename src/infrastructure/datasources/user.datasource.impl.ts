@@ -19,58 +19,19 @@ import { TokenMapper } from "../mappers/user/token.mapper";
 import { CustomError } from "#/domain/errors/custom.error";
 import { AddressMapper } from "../mappers/user/address.mapper";
 import { CountriesCodes } from "../interfaces/user/countries.interfaces";
-import { UjwtAdapter } from "#/domain/interfaces/adapters/jwt.adapter.interface";
 import { UuidAdapter } from "#/domain/interfaces/adapters/uuid.adapter.interface";
 import { ContactInformationMapper } from "../mappers/user/contactInformation.mapper";
 import { PersonalInformationMapper } from "../mappers/user/personalInformation.mapper";
 import { UbcryptAdapter } from "#/domain/interfaces/adapters/bcrypt.adapter.interface";
 import { Identifications, PersonTypes, TokenTypeCodes } from '#/infrastructure/interfaces';
-import { AuthDto, CreateAddressDto, CreateContactInformationDto, CreatePersonalInformationDto, CreateTokenDto } from "#/domain/dtos";
+import { CreateAddressDto, CreateContactInformationDto, CreatePersonalInformationDto, CreateTokenDto } from "#/domain/dtos";
 
 export class UserDataSourceImpl implements UserDataSource {
   constructor(
     private readonly uidAdapter: UuidAdapter,
     private readonly momentAdapter: TimeAdapter,
-    private readonly jwtAdapter: UjwtAdapter,
     private readonly bcryptAdapter: UbcryptAdapter,
   ) { }
-
-  async auth({ email, password }: AuthDto): Promise<string> {
-    const transaction = await sequelize.transaction({
-      isolationLevel: Transaction.ISOLATION_LEVELS.READ_COMMITTED,
-    });
-
-    try {
-      const user = await User.findOne({
-        where: {
-          active: true,
-          email: email.toLowerCase(),
-        },
-        attributes: {
-          include: ['password'],
-          exclude: ['lastAccess'],
-        },
-        transaction,
-      });
-
-      if (!user) throw CustomError.unauthorized('Error, Ha ocurrido un error en el proceso de autenticación.');
-      if (!user.emailValidate) throw CustomError.unauthorized('Error, Esta cuenta no se encuentra activada.');
-
-      const compare = await this.bcryptAdapter.compare(user.password, password);
-
-      if (!compare) throw CustomError.unauthorized('Error, Ha ocurrido un error en el proceso de autenticación.');
-
-      return this.jwtAdapter.generate(user);
-    } catch (error) {
-      console.log(error);
-      await transaction.rollback();
-      if (error instanceof CustomError) {
-        throw error;
-      }
-
-      throw CustomError.internal();
-    }
-  }
 
   async createUser({
     createUserDto,
