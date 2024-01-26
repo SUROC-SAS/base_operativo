@@ -2,10 +2,14 @@ import { handleError } from '../error';
 import { UserRepository } from '#/domain';
 import { Request, Response } from 'express';
 import { CreateUser } from '#/domain/use-cases';
+import EmailService from '../services/email.service';
 import { CreateAddressDto, CreateContactInformationDto, CreatePersonalInformationDto, CreateUserDto } from '#/domain/dtos';
 
 export class UserController {
-  constructor(private readonly userRepository: UserRepository) {}
+  constructor(
+    private readonly userRepository: UserRepository,
+    private readonly emailService: EmailService,
+  ) { }
 
   createUser = (req: Request, res: Response) => {
     const [errUserDto, createUserDto] = CreateUserDto.create(req.body);
@@ -18,7 +22,7 @@ export class UserController {
       return res.status(400).json({ err });
     }
 
-    new CreateUser(this.userRepository)
+    new CreateUser(this.emailService, this.userRepository)
       .execute({
         createUserDto: createUserDto!,
         createAddressDto: createAddressDto!,
