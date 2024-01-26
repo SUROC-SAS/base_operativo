@@ -2,13 +2,13 @@ import { handleError } from '../error';
 import { UserRepository } from '#/domain';
 import { Request, Response } from 'express';
 import { CreateUser } from '#/domain/use-cases';
-import EmailService from '../services/email.service';
+import { MailService } from '#/domain/interfaces/services/email.service';
 import { CreateAddressDto, CreateContactInformationDto, CreatePersonalInformationDto, CreateUserDto } from '#/domain/dtos';
 
 export class UserController {
   constructor(
     private readonly userRepository: UserRepository,
-    private readonly emailService: EmailService,
+    private readonly emailService: MailService,
   ) { }
 
   createUser = (req: Request, res: Response) => {

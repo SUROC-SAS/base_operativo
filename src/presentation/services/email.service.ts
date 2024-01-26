@@ -42,12 +42,10 @@ class EmailService implements MailService {
   }
 
   prepareHtml(templateName: string, data: { [k: string]: unknown }) {
-    const template = resolve(__dirname, '..', '..', '..', 'src', 'config', 'services', `templates/${templateName}.mjml`);
+    const template = resolve(__dirname, '..', '..', '..', 'src', 'presentation', 'services', `templates/${templateName}.mjml`);
+    const filePath = resolve(__dirname, '..', '..', '..', 'src', 'presentation', 'services', 'templates');
     const compileTemplate = hbs.compile(fs.readFileSync(template, 'utf-8'));
-
-    const html = mjml2html(compileTemplate(data), {
-      filePath: resolve(__dirname, '..', '..', '..', 'src', 'config', 'services', 'templates'),
-    }).html;
+    const html = mjml2html(compileTemplate(data), { filePath }).html;
 
     return html;
   }

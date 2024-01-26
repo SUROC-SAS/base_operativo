@@ -1,13 +1,13 @@
 import { CreateUserDtos, User } from '#/domain/interfaces';
-import EmailService from '#/presentation/services/email.service';
 import { UserRepository } from '#/domain/repositories/user.repository';
+import { MailService } from '#/domain/interfaces/services/email.service';
 interface CreateUserUseCase {
   execute(createUserDtos: CreateUserDtos): Promise<User>;
 }
 
 export class CreateUser implements CreateUserUseCase {
   constructor(
-    private readonly emailService: EmailService,
+    private readonly emailService: MailService,
     private readonly userRepository: UserRepository,
   ) { }
 
