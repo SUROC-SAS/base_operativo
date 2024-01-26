@@ -5,7 +5,10 @@ import {
   CreationOptional,
   InferCreationAttributes,
   HasOneGetAssociationMixin,
+  HasManyGetAssociationsMixin,
+  BelongsToManyAddAssociationsMixin,
 } from 'sequelize';
+import Role from './role.model';
 import { sequelize } from '../postgreSQL-database';
 import ContactInformation from './contact-information.model';
 import PersonalInformation from './personal-information.model';
@@ -22,6 +25,10 @@ export default class User extends Model<InferAttributes<User>, InferCreationAttr
   declare updatedAt: CreationOptional<Date>;
   declare deletedAt: CreationOptional<Date>;
 
+  declare roles?: Role[];
+  declare getRoles: HasManyGetAssociationsMixin<Role>;
+  declare addRoles: BelongsToManyAddAssociationsMixin<Role, Role['id']>;
+
   declare personalInformation?: PersonalInformation;
   declare getPersonalInformation: HasOneGetAssociationMixin<PersonalInformation>;
 
@@ -31,6 +38,13 @@ export default class User extends Model<InferAttributes<User>, InferCreationAttr
   static associate(): void {
     User.hasOne(ContactInformation, { as: 'contactInformation', sourceKey: 'id', foreignKey: 'userId' });
     User.hasOne(PersonalInformation, { as: 'personalInformation', sourceKey: 'id', foreignKey: 'userId' });
+
+    User.belongsToMany(Role, {
+      through: 'AssignedRoles',
+      foreignKey: 'userId',
+      otherKey: 'roleId',
+      as: 'roles',
+    });
   }
 }
 
