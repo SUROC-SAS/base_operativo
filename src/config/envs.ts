@@ -2,6 +2,7 @@ import 'dotenv/config';
 import { get } from 'env-var';
 
 export const envs = {
+  API_URL: get('API_URL').required().asString(),
   PORT: get('PORT').required().asPortNumber(),
   DB_USERNAME: get('DB_USERNAME').required().asString(),
   DB_PASSWORD: get('DB_PASSWORD').required().asString(),
@@ -13,5 +14,5 @@ export const envs = {
   SMTP_HOST: get('SMTP_HOST').required().asString(),
   SMTP_USER: get('SMTP_USER').required().asString(),
   SMTP_PORT: get('SMTP_PORT').required().asPortNumber(),
-  SMTP_PASSWORD: get('SMTP_PASSWORD').required().asString()
+  SMTP_PASSWORD: get('SMTP_PASSWORD').required().asString(),
 };

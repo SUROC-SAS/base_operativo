@@ -1,15 +1,16 @@
 import { handleError } from '../error';
 import { UserRepository } from '#/domain';
 import { Request, Response } from 'express';
-import { CreateUser } from '#/domain/use-cases';
 import { MailService } from '#/domain/interfaces/services/email.service';
-import { CreateAddressDto, CreateContactInformationDto, CreatePersonalInformationDto, CreateUserDto } from '#/domain/dtos';
+import { CreateUser, RecoveryPassword, UpdatePassword } from '#/domain/use-cases';
+import { CreateAddressDto, CreateContactInformationDto, CreatePersonalInformationDto, CreateUserDto, RecoveryPasswordDto, UpdatePasswordDto } from '#/domain/dtos';
 
 export class UserController {
   constructor(
     private readonly userRepository: UserRepository,
     private readonly emailService: MailService,
   ) { }
+
 
   createUser = (req: Request, res: Response) => {
     const [errUserDto, createUserDto] = CreateUserDto.create(req.body);
@@ -35,5 +36,27 @@ export class UserController {
       .catch((err) => {
         handleError(err, res);
       });
+  };
+
+  recoveryPassword = (req: Request, res: Response) => {
+    const [errRecoveryPasswordDto, recoveryPasswordDto] = RecoveryPasswordDto.validate(req.body);
+
+    if (errRecoveryPasswordDto) return res.status(400).json({ err: errRecoveryPasswordDto });
+
+    new RecoveryPassword(this.emailService, this.userRepository)
+      .execute(recoveryPasswordDto!)
+      .then((response) => res.status(201).send(response))
+      .catch((err) => handleError(err, res));
+  };
+
+  updatePassword = (req: Request, res: Response) => {
+    const [errUpdatePasswordDto, updatePasswordDto] = UpdatePasswordDto.updatePassword({ ...req.body, ...req.query });
+
+    if (errUpdatePasswordDto) return res.status(400).json({ err: errUpdatePasswordDto });
+
+    new UpdatePassword(this.userRepository)
+      .execute(updatePasswordDto!)
+      .then((response) => res.status(201).send(response))
+      .catch((err) => handleError(err, res));
   };
 }

@@ -10,27 +10,27 @@ import Identification from '#/data/postgreSQL/models/identification.model';
 import ContactInformation from '#/data/postgreSQL/models/contact-information.model';
 import PersonalInformation from '#/data/postgreSQL/models/personal-information.model';
 import { UserMapper } from '../mappers';
-import { Transaction } from 'sequelize';
+import { Op, Transaction } from 'sequelize';
 import { UserDataSource } from '#/domain';
 import { sequelize } from '#/data/postgreSQL';
-import { CreateUserDtos } from '#/domain/interfaces';
 import { CustomError } from '#/domain/errors/custom.error';
 import { TokenMapper } from '../mappers/user/token.mapper';
 import { AddressMapper } from '../mappers/user/address.mapper';
+import { CreateUserDtos, RecoveryPassword } from '#/domain/interfaces';
 import { TimeAdapter, UbcryptAdapter, units } from '#/domain/interfaces';
 import { CountriesCodes } from '../interfaces/user/countries.interfaces';
 import { UuidAdapter } from '#/domain/interfaces/adapters/uuid.adapter.interface';
 import { ContactInformationMapper } from '../mappers/user/contactInformation.mapper';
 import { PersonalInformationMapper } from '../mappers/user/personalInformation.mapper';
 import { Identifications, PersonTypes, TokenTypeCodes } from '#/infrastructure/interfaces';
-import { CreateAddressDto, CreateContactInformationDto, CreatePersonalInformationDto, CreateTokenDto } from '#/domain/dtos';
+import { CreateAddressDto, CreateContactInformationDto, CreatePersonalInformationDto, CreateTokenDto, RecoveryPasswordDto, UpdatePasswordDto } from '#/domain/dtos';
 
 export class UserDataSourceImpl implements UserDataSource {
   constructor(
     private readonly uidAdapter: UuidAdapter,
     private readonly momentAdapter: TimeAdapter,
     private readonly bcryptAdapter: UbcryptAdapter
-  ) {}
+  ) { }
 
   async createUser({
     createUserDto,
@@ -67,7 +67,6 @@ export class UserDataSourceImpl implements UserDataSource {
       );
 
       await user.update({ uid: `US${user.id + 1000}` }, { transaction });
-
       const personalInformation = await this.createPersonalInformation(createPersonalInformationDto, user.id, transaction);
       const contactInformation = await this.createContactInformation(createContactInformationDto, user.id, transaction);
       const address = await this.createAddress(createAddressDto, user.id, transaction);
@@ -232,14 +231,12 @@ export class UserDataSourceImpl implements UserDataSource {
     return ContactInformationMapper(contactInformation);
   }
 
-  private async createToken(userId: number, transaction: Transaction) {
-    const tokenType = await TokenType.findOne({ where: { code: TokenTypeCodes.CONFIRM_EMAIL }, transaction });
-
+  private async createToken(tokenTypeId: number, userId: number, transaction: Transaction) {
     const [errTokenDto, createTokenDto] = CreateTokenDto.create({
       token: this.uidAdapter.generate(18),
       expire: this.momentAdapter.addTimes(15, units.DAY),
       used: false,
-      tokenTypeId: tokenType!.id,
+      tokenTypeId,
       userId,
     });
 
@@ -248,5 +245,106 @@ export class UserDataSourceImpl implements UserDataSource {
     const token = await Token.create(createTokenDto, { transaction });
 
     return TokenMapper(token);
+  }
+
+  async updatePassword({ password, token }: UpdatePasswordDto): Promise<void> {
+    const transaction = await sequelize.transaction({
+      isolationLevel: Transaction.ISOLATION_LEVELS.READ_COMMITTED,
+    });
+
+    try {
+      const tokenUser = await Token.findOne({ where: { token }, transaction });
+
+      if (!tokenUser) throw CustomError.unauthorized('Token no encontrado.');
+      if (tokenUser.expire && this.momentAdapter.isSameOrAfter(tokenUser.expire)) throw CustomError.unauthorized('Token ha expirado.');
+      if (tokenUser.used) throw CustomError.unauthorized('Token usado.');
+
+      await Promise.all([
+        tokenUser.update({ used: true }, { transaction }),
+        User.update({ password: this.bcryptAdapter.encrypt(password) }, { where: { id: tokenUser.userId }, transaction }),
+      ]);
+
+      await transaction.commit();
+    } catch (error) {
+      console.log(error);
+      await transaction.rollback();
+      if (error instanceof CustomError) {
+        throw error;
+      }
+
+      throw CustomError.internal();
+    }
+  }
+
+  async recoveryPassword({ email }: RecoveryPasswordDto): Promise<RecoveryPassword> {
+    const transaction = await sequelize.transaction({
+      isolationLevel: Transaction.ISOLATION_LEVELS.READ_COMMITTED,
+    });
+
+    try {
+      const user = await User.findOne({
+        where: {
+          active: true,
+          email: email.toLowerCase(),
+        },
+        include: [
+          {
+            association: 'personalInformation',
+          },
+        ],
+        attributes: {
+          exclude: ['lastAccess'],
+        },
+        transaction,
+      });
+
+      if (!user) throw CustomError.unauthorized('Error, Ha ocurrido un error en el proceso de recuperación de contraseña.');
+      if (!user.emailValidate) throw CustomError.unauthorized('Error, Ha ocurrido un error en el proceso de recuperación de contraseña.');
+
+      const tokenType = await TokenType.findOne({
+        where: { code: TokenTypeCodes.RECOVERY_PASSWORD },
+        transaction,
+      });
+
+      const [lastToken, lastTokenOnDay] = await Promise.all([
+        Token.findOne({
+          where: {
+            userId: user.id,
+            tokenTypeId: tokenType!.id,
+            createdAt: {
+              [Op.gte]: this.momentAdapter.addTimes(-1, units.HOUR),
+            },
+          },
+          transaction,
+          lock: transaction.LOCK.UPDATE,
+        }),
+        Token.findAll({
+          where: {
+            userId: user.id,
+            tokenTypeId: tokenType!.id,
+            createdAt: { [Op.gte]: this.momentAdapter.startOf(units.DAY) },
+          },
+          transaction,
+          lock: transaction.LOCK.UPDATE,
+        })
+      ]);
+
+      if (lastToken) throw CustomError.unauthorized('Solo se puede solicitar cambio de contraseña una vez cada hora.');
+      if (lastTokenOnDay.length >= 3) throw CustomError.unauthorized('Solo se puede solicitar cambio de contraseña tres veces en un mismo dia.');
+
+      const token = await this.createToken(tokenType!.id, user.id, transaction);
+
+      await transaction.commit();
+
+      return { user, token };
+    } catch (error) {
+      console.log(error);
+      await transaction.rollback();
+      if (error instanceof CustomError) {
+        throw error;
+      }
+
+      throw CustomError.internal();
+    }
   }
 }

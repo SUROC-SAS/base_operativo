@@ -10,5 +10,7 @@ export enum units {
 }
 
 export interface TimeAdapter {
+  startOf(unit: units): Date;
+  isSameOrAfter(expire: Date): boolean;
   addTimes(amount: number, unit: units): Date;
 }
