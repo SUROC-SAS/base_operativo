@@ -1,4 +1,5 @@
 import User from '#/data/postgreSQL/models/user.model';
+import Role from '#/data/postgreSQL/models/role.model';
 import Token from '#/data/postgreSQL/models/token.model';
 import State from '#/data/postgreSQL/models/state.model';
 import Country from '#/data/postgreSQL/models/country.model';
@@ -6,6 +7,7 @@ import Address from '#/data/postgreSQL/models/address.model';
 import TokenType from '#/data/postgreSQL/models/token-type.model';
 import PersonType from '#/data/postgreSQL/models/person-type.model';
 import Municipality from '#/data/postgreSQL/models/municipality.model';
+import AssignedRole from '#/data/postgreSQL/models/assigned-role.model';
 import Identification from '#/data/postgreSQL/models/identification.model';
 import ContactInformation from '#/data/postgreSQL/models/contact-information.model';
 import PersonalInformation from '#/data/postgreSQL/models/personal-information.model';
@@ -19,22 +21,24 @@ import { TokenMapper } from '../mappers/user/token.mapper';
 import { AddressMapper } from '../mappers/user/address.mapper';
 import { TimeAdapter, UbcryptAdapter, units } from '#/domain/interfaces';
 import { CountriesCodes } from '../interfaces/user/countries.interfaces';
+import { AssignedRoleMapper } from '../mappers/user/assigned-role.mapper';
 import { UuidAdapter } from '#/domain/interfaces/adapters/uuid.adapter.interface';
 import { ContactInformationMapper } from '../mappers/user/contactInformation.mapper';
 import { PersonalInformationMapper } from '../mappers/user/personalInformation.mapper';
 import { Identifications, PersonTypes, TokenTypeCodes } from '#/infrastructure/interfaces';
-import { CreateAddressDto, CreateContactInformationDto, CreatePersonalInformationDto, CreateTokenDto } from '#/domain/dtos';
+import { CreateAddressDto, CreateAssignedRoleDto, CreateContactInformationDto, CreatePersonalInformationDto, CreateTokenDto } from '#/domain/dtos';
 
 export class UserDataSourceImpl implements UserDataSource {
   constructor(
     private readonly uidAdapter: UuidAdapter,
     private readonly momentAdapter: TimeAdapter,
     private readonly bcryptAdapter: UbcryptAdapter
-  ) {}
+  ) { }
 
   async createUser({
     createUserDto,
     createAddressDto,
+    createAssignedRoleDto,
     createContactInformationDto,
     createPersonalInformationDto,
   }: CreateUserDtos) {
@@ -70,10 +74,12 @@ export class UserDataSourceImpl implements UserDataSource {
 
       const personalInformation = await this.createPersonalInformation(createPersonalInformationDto, user.id, transaction);
       const contactInformation = await this.createContactInformation(createContactInformationDto, user.id, transaction);
+      const assignedRoles = await this.createAssignedRoles(createAssignedRoleDto, user.id, transaction);
       const address = await this.createAddress(createAddressDto, user.id, transaction);
 
       const userMapper = UserMapper(user);
       userMapper.address = address;
+      userMapper.assignedRoles = assignedRoles;
       userMapper.personalInformation = personalInformation;
       userMapper.contactInformation = contactInformation;
 
@@ -215,15 +221,15 @@ export class UserDataSourceImpl implements UserDataSource {
   }
 
   private async createContactInformation(
-    contactInformationDto: CreateContactInformationDto,
+    createContactInformationDto: CreateContactInformationDto,
     userId: number,
     transaction: Transaction
   ) {
     const contactInformation = await ContactInformation.create(
       {
-        mobile: contactInformationDto.mobile,
-        phoneOne: contactInformationDto.phoneOne,
-        phoneTwo: contactInformationDto.phoneTwo,
+        mobile: createContactInformationDto.mobile,
+        phoneOne: createContactInformationDto.phoneOne,
+        phoneTwo: createContactInformationDto.phoneTwo,
         userId,
       },
       { transaction }
@@ -248,5 +254,21 @@ export class UserDataSourceImpl implements UserDataSource {
     const token = await Token.create(createTokenDto, { transaction });
 
     return TokenMapper(token);
+  }
+
+  private async createAssignedRoles(createAssignedRoleDto: CreateAssignedRoleDto, userId: number, transaction: Transaction) {
+    const roles = await Role.findAll({
+      where: { code: createAssignedRoleDto.roles },
+      transaction
+    });
+
+    createAssignedRoleDto.roles.forEach(code => {
+      const exist = roles.some(role => role.code === code);
+      if (!exist) throw CustomError.badRequest(`Código ${code} no encontrado en roles.`);
+    });
+
+    const assignedRoles = await AssignedRole.bulkCreate(roles.map(role => ({ roleId: role.id, userId })), { transaction });
+
+    return assignedRoles.map(assignedRole => AssignedRoleMapper(assignedRole));
   }
 }
