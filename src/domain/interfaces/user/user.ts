@@ -1,3 +1,4 @@
+import { Token } from './token';
 import { Address } from './address';
 import { ContactInformation } from './contactInformation';
 import { PersonalInformation } from './personalInformation';
@@ -17,4 +18,9 @@ export interface CreateUserDtos {
   createAddressDto: CreateAddressDto;
   createContactInformationDto: CreateContactInformationDto;
   createPersonalInformationDto: CreatePersonalInformationDto;
+}
+
+export interface RecoveryPassword {
+  user: User,
+  token: Token
 }

@@ -23,6 +23,8 @@ export class UserRoutes {
     const controller = new UserController(repository, emailService);
 
     router.post('/', controller.createUser);
+    router.post('/update-password', controller.updatePassword);
+    router.post('/recover-password', controller.recoveryPassword);
     return router;
   }
 }
