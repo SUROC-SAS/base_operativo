@@ -3,9 +3,9 @@ import { AuthRepository } from '#/domain';
 import { JWTAdapter } from '#/domain/interfaces';
 import { CustomError } from '#/domain/errors/custom.error';
 import { Response, NextFunction } from 'express-serve-static-core';
-import { AppRequest, AuthMiddlewares } from '#/infrastructure/interfaces';
+import { AppRequest } from '#/infrastructure/interfaces';
 
-export class AuthMiddleware implements AuthMiddlewares {
+export class AuthMiddleware {
   constructor(
     private readonly jwtAdapter: JWTAdapter,
     private readonly authRepository: AuthRepository,
