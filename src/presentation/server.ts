@@ -1,24 +1,45 @@
 import express from 'express';
+import { envs } from '#/config';
+import { createServer } from 'http';
 import { AppRoutes } from './routes';
+import { subscribeChannel } from './sockets';
+import { Server as ServerIO, ServerOptions } from 'socket.io';
+
+const { DOMAIN_ALLOWED } = envs;
 
 interface Options {
   port?: number;
 }
 
 export class Server {
-  public readonly app = express();
   private readonly port: number;
+  public readonly express = express();
+  public readonly httpServer = createServer(this.express);
 
   constructor(option: Options) {
     this.port = option?.port || 8080;
   }
 
-  async start() {
-    this.app.use(express.json());
-    this.app.use(express.urlencoded({ extended: true }));
-    this.app.use(AppRoutes.routes);
+  initSocket() {
+    const options: Partial<ServerOptions> = {
+      cors: {
+        origin: DOMAIN_ALLOWED.split('|'),
+      },
+      path: '/socket',
+    };
 
-    this.app.listen(this.port, () => {
+    const io = new ServerIO(this.httpServer, options);
+    subscribeChannel(io);
+  }
+
+  async start() {
+    this.express.use(express.json());
+    this.express.use(express.urlencoded({ extended: true }));
+    this.express.use(AppRoutes.routes);
+
+    this.initSocket();
+
+    this.httpServer.listen(this.port, () => {
       console.log(`Server is running ${this.port}`);
     });
   }
