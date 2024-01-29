@@ -19,4 +19,8 @@ export class JwtAdapter implements JWTAdapter {
 
     return token;
   }
+
+  verify(token: string): Record<string, unknown> {
+    return jwt.verify(token, SECRET) as Record<string, unknown>;
+  }
 }
