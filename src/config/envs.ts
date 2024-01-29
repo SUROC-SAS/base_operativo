@@ -13,5 +13,6 @@ export const envs = {
   SMTP_HOST: get('SMTP_HOST').required().asString(),
   SMTP_USER: get('SMTP_USER').required().asString(),
   SMTP_PORT: get('SMTP_PORT').required().asPortNumber(),
-  SMTP_PASSWORD: get('SMTP_PASSWORD').required().asString()
+  SMTP_PASSWORD: get('SMTP_PASSWORD').required().asString(),
+  DOMAIN_ALLOWED: get('DOMAIN_ALLOWED').required().asString(),
 };
