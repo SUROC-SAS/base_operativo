@@ -19,7 +19,7 @@ export class AuthMiddleware implements AuthMiddlewares {
       const token = req.headers.authorization ? req.headers.authorization.split(' ').pop() : null;
       if (!token) throw CustomError.unauthorized('No tienes acceso aquí');
 
-      const decoded = this.jwtAdapter.verify(token!);
+      const decoded = this.jwtAdapter.verify(token);
       const user = await this.authRepository.authWithToken(decoded);
       if (!user) throw CustomError.unauthorized('No tienes acceso aquí');
 
