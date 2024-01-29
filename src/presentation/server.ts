@@ -33,11 +33,11 @@ export class Server {
   }
 
   async start() {
+    this.initSocket();
+
     this.express.use(express.json());
     this.express.use(express.urlencoded({ extended: true }));
     this.express.use(AppRoutes.routes);
-
-    this.initSocket();
 
     this.httpServer.listen(this.port, () => {
       console.log(`Server is running ${this.port}`);
