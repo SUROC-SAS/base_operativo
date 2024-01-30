@@ -1,7 +1,7 @@
 import { GENERATOR, Validator } from '#/config/validator';
 
 interface Constructor {
-  id: number;
+  id?: number;
   email: string;
   password: string;
   active: boolean;
@@ -49,7 +49,7 @@ export class SaveUserDto {
     return {
       email: GENERATOR.string().email().required(),
       password: GENERATOR.string().min(8).required(),
-      id: GENERATOR.number().positive().optional().default(null),
+      id: GENERATOR.number().positive().nullable().default(null),
     };
   }
 
