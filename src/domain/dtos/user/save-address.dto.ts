@@ -45,6 +45,7 @@ export class SaveAddressDto {
     ];
   }
 
+  /** @TODO: transformar el payload a guardar si cambian elementos dependientes, como person type, countries, etc */
   static getSchema = (): Record<string, unknown> => ({
     stateId: GENERATOR.number().nullable().default(null),
     address: GENERATOR.string().trim().nullable().default(null),

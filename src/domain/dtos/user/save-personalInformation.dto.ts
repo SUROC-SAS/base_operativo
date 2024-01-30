@@ -84,6 +84,7 @@ export class SavePersonalInformationDto {
   }
 
   static getSchema(): Record<string, unknown> {
+    /** @TODO: transformar el payload a guardar si cambian elementos dependientes, como person type, countries, etc */
     return {
       dv: GENERATOR.number().optional().nullable(),
       firstName: GENERATOR.string().trim().optional().nullable(),

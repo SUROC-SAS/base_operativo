@@ -5,6 +5,7 @@ import { CreateUser, UpdateUser } from '#/domain/use-cases';
 import { MailService } from '#/domain/interfaces/services/email.service';
 import {
   SaveUserDto,
+  UpdateUserDto,
   SaveAddressDto,
   SaveContactInformationDto,
   SavePersonalInformationDto,
@@ -43,7 +44,7 @@ export class UserController {
   };
 
   updateUser = (req: Request, res: Response) => {
-    const [errUserDto, saveUserDto] = SaveUserDto.save({ ...req.body, ...req.params });
+    const [errUserDto, saveUserDto] = UpdateUserDto.save({ ...req.body, ...req.params });
     const [errAddressDto, saveAddressDto] = SaveAddressDto.save(req.body?.address);
     const [errPersonalDto, savePersonalInformationDto] = SavePersonalInformationDto.save(req.body?.personalInformation);
     const [errContactDto, saveContactInformationDto] = SaveContactInformationDto.save(req.body?.contactInformation);

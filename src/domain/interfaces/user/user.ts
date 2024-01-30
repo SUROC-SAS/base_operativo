@@ -1,7 +1,7 @@
 import { Address } from './address';
 import { ContactInformation } from './contactInformation';
 import { PersonalInformation } from './personalInformation';
-import { SaveAddressDto, SaveContactInformationDto, SavePersonalInformationDto, SaveUserDto } from '#/domain/dtos';
+import { SaveAddressDto, SaveContactInformationDto, SavePersonalInformationDto, SaveUserDto, UpdateUserDto } from '#/domain/dtos';
 
 export interface User {
   id: number;
@@ -18,3 +18,8 @@ export interface SaveUserDtos {
   saveContactInformationDto: SaveContactInformationDto;
   savePersonalInformationDto: SavePersonalInformationDto;
 }
+
+export interface UpdateUserDtos extends Omit<SaveUserDtos, 'saveUserDto'> {
+  saveUserDto: UpdateUserDto;
+}
+

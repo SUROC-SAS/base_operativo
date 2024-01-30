@@ -13,10 +13,10 @@ import { UserMapper } from '../mappers';
 import { UserDataSource } from '#/domain';
 import { Op, Transaction } from 'sequelize';
 import { sequelize } from '#/data/postgreSQL';
-import { SaveUserDtos } from '#/domain/interfaces';
 import { CustomError } from '#/domain/errors/custom.error';
 import { TokenMapper } from '../mappers/user/token.mapper';
 import { AddressMapper } from '../mappers/user/address.mapper';
+import { SaveUserDtos, UpdateUserDtos } from '#/domain/interfaces';
 import { TimeAdapter, UbcryptAdapter, units } from '#/domain/interfaces';
 import { CountriesCodes } from '../interfaces/user/countries.interfaces';
 import { UuidAdapter } from '#/domain/interfaces/adapters/uuid.adapter.interface';
@@ -250,15 +250,12 @@ export class UserDataSourceImpl implements UserDataSource {
     return TokenMapper(token);
   }
 
-  async updateUser({ saveUserDto, saveAddressDto, saveContactInformationDto, savePersonalInformationDto }: SaveUserDtos) {
+  async updateUser({ saveUserDto, saveAddressDto, saveContactInformationDto, savePersonalInformationDto }: UpdateUserDtos) {
     const transaction = await sequelize.transaction({
       isolationLevel: Transaction.ISOLATION_LEVELS.READ_COMMITTED,
     });
 
     try {
-      const error = saveUserDto.validateUpdate();
-      if (error) throw CustomError.badRequest(error);
-
       const user = await User.findByPk(saveUserDto.id, { transaction });
       if (!user) throw CustomError.badRequest('User not exist');
 
