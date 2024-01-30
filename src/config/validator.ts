@@ -9,7 +9,6 @@ export const GENERATOR = yup;
 export class Validator {
   static validateObject<T>(schema: Record<string, any>, input: Record<string, unknown>): [string?, T?] {
     const mutatedSchema = yup.object().shape(schema);
-    console.log(mutatedSchema.validateSync(input));
 
     const isValid = mutatedSchema.isValidSync(input);
     if (!isValid) {
