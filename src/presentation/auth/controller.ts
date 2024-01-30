@@ -5,7 +5,7 @@ import { Auth } from '#/domain/use-cases';
 import { Request, Response } from 'express';
 
 export class AuthController {
-  constructor(private readonly authRepository: AuthRepository) { }
+  constructor(private readonly authRepository: AuthRepository) {}
 
   auth = (req: Request, res: Response) => {
     const [errAuthDto, authDto] = AuthDto.create(req.body);

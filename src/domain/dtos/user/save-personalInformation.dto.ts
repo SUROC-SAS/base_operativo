@@ -13,7 +13,7 @@ interface Constructor {
   personTypeId?: number;
 }
 
-export class CreatePersonalInformationDto {
+export class SavePersonalInformationDto {
   dv: Constructor['dv'];
   firstName: Constructor['firstName'];
   middleName: Constructor['middleName'];
@@ -49,8 +49,8 @@ export class CreatePersonalInformationDto {
     this.personTypeId = personTypeId;
   }
 
-  static create(object: Record<string, unknown>): [string?, CreatePersonalInformationDto?] {
-    const [error, response] = Validator.validateObject<CreatePersonalInformationDto>(this.getSchema(), object);
+  static create(object: Record<string, unknown>): [string?, SavePersonalInformationDto?] {
+    const [error, response] = Validator.validateObject<SavePersonalInformationDto>(this.getSchema(), object);
     if (error) {
       return [error];
     }
@@ -67,7 +67,7 @@ export class CreatePersonalInformationDto {
       taxLiabilityId,
       identificationId,
     } = response!;
-    const dto = new CreatePersonalInformationDto({
+    const dto = new SavePersonalInformationDto({
       dv,
       firstName,
       middleName,

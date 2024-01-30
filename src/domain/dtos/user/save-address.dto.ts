@@ -9,7 +9,7 @@ interface Constructor {
   municipalityId?: number;
 }
 
-export class CreateAddressDto {
+export class SaveAddressDto {
   address: Constructor['address'];
   stateId: Constructor['stateId'];
   stateName: Constructor['stateName'];
@@ -26,15 +26,15 @@ export class CreateAddressDto {
     this.stateName = stateName;
   }
 
-  static create(object: Record<string, unknown>): [string?, CreateAddressDto?] {
-    const [error, response] = Validator.validateObject<CreateAddressDto>(this.getSchema(), object);
+  static create(object: Record<string, unknown>): [string?, SaveAddressDto?] {
+    const [error, response] = Validator.validateObject<SaveAddressDto>(this.getSchema(), object);
     if (error) return [error];
 
     const { address, stateId, countryId, stateName, postalCode, municipalityId } = response!;
 
     return [
       undefined,
-      new CreateAddressDto({
+      new SaveAddressDto({
         address,
         stateId,
         countryId,

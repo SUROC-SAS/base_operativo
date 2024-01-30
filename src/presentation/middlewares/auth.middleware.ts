@@ -8,9 +8,8 @@ import { AppRequest } from '#/infrastructure/interfaces';
 export class AuthMiddleware {
   constructor(
     private readonly jwtAdapter: JWTAdapter,
-    private readonly authRepository: AuthRepository,
-  ) {
-  }
+    private readonly authRepository: AuthRepository
+  ) {}
 
   isAuth = async (req: AppRequest, res: Response, next: NextFunction) => {
     try {

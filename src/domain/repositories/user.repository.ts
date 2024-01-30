@@ -1,5 +1,6 @@
-import { CreateUserDtos, User } from '../interfaces';
+import { SaveUserDtos, SaveUserDtos, User } from '../interfaces';
 
 export abstract class UserRepository {
-  abstract createUser(createUserDtos: CreateUserDtos): Promise<User>;
+  abstract createUser(createUserDtos: SaveUserDtos): Promise<User>;
+  abstract updateUser(updateUserDtos: SaveUserDtos): Promise<User>;
 }

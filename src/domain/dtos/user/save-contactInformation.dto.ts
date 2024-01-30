@@ -6,7 +6,7 @@ interface Constructor {
   phoneTwo?: number;
 }
 
-export class CreateContactInformationDto {
+export class SaveContactInformationDto {
   mobile: Constructor['mobile'];
   phoneOne: Constructor['phoneOne'];
   phoneTwo: Constructor['phoneTwo'];
@@ -17,15 +17,15 @@ export class CreateContactInformationDto {
     this.phoneTwo = phoneTwo;
   }
 
-  static create(object: Record<string, unknown>): [string?, CreateContactInformationDto?] {
-    const [error, response] = Validator.validateObject<CreateContactInformationDto>(this.getSchema(), object);
+  static create(object: Record<string, unknown>): [string?, SaveContactInformationDto?] {
+    const [error, response] = Validator.validateObject<SaveContactInformationDto>(this.getSchema(), object);
     if (error) {
       return [error];
     }
 
     const { mobile, phoneOne, phoneTwo } = response!;
 
-    const dto = new CreateContactInformationDto({
+    const dto = new SaveContactInformationDto({
       mobile,
       phoneOne,
       phoneTwo,

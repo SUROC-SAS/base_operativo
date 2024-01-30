@@ -23,6 +23,7 @@ export class UserRoutes {
     const controller = new UserController(repository, emailService);
 
     router.post('/', controller.createUser);
+    router.put('/:id', controller.updateUser);
     return router;
   }
 }

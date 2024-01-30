@@ -3,15 +3,15 @@ import { AuthRepository } from '#/domain/repositories/auth.repository';
 
 interface AuthUseCase {
   execute(authDto: AuthDto): Promise<{
-    token: string
+    token: string;
   }>;
 }
 
 export class Auth implements AuthUseCase {
-  constructor(private readonly authRepository: AuthRepository) { }
+  constructor(private readonly authRepository: AuthRepository) {}
 
   async execute(authDto: AuthDto): Promise<{
-    token: string,
+    token: string;
   }> {
     const token = await this.authRepository.auth(authDto);
     return {

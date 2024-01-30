@@ -1,7 +1,7 @@
 import { Address } from './address';
 import { ContactInformation } from './contactInformation';
 import { PersonalInformation } from './personalInformation';
-import { CreateAddressDto, CreateContactInformationDto, CreatePersonalInformationDto, CreateUserDto } from '#/domain/dtos';
+import { SaveAddressDto, SaveContactInformationDto, SavePersonalInformationDto, SaveUserDto } from '#/domain/dtos';
 
 export interface User {
   id: number;
@@ -12,9 +12,9 @@ export interface User {
   personalInformation?: PersonalInformation;
 }
 
-export interface CreateUserDtos {
-  createUserDto: CreateUserDto;
-  createAddressDto: CreateAddressDto;
-  createContactInformationDto: CreateContactInformationDto;
-  createPersonalInformationDto: CreatePersonalInformationDto;
+export interface SaveUserDtos {
+  createUserDto: SaveUserDto;
+  createAddressDto: SaveAddressDto;
+  createContactInformationDto: SaveContactInformationDto;
+  createPersonalInformationDto: SavePersonalInformationDto;
 }

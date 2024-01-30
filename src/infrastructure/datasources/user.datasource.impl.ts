@@ -9,21 +9,29 @@ import Municipality from '#/data/postgreSQL/models/municipality.model';
 import Identification from '#/data/postgreSQL/models/identification.model';
 import ContactInformation from '#/data/postgreSQL/models/contact-information.model';
 import PersonalInformation from '#/data/postgreSQL/models/personal-information.model';
-import { UserMapper } from '../mappers';
-import { Transaction } from 'sequelize';
 import { UserDataSource } from '#/domain';
 import { sequelize } from '#/data/postgreSQL';
-import { CreateUserDtos } from '#/domain/interfaces';
 import { CustomError } from '#/domain/errors/custom.error';
 import { TokenMapper } from '../mappers/user/token.mapper';
 import { AddressMapper } from '../mappers/user/address.mapper';
+import { SaveUserDtos, SaveUserDtos } from '#/domain/interfaces';
 import { TimeAdapter, UbcryptAdapter, units } from '#/domain/interfaces';
 import { CountriesCodes } from '../interfaces/user/countries.interfaces';
 import { UuidAdapter } from '#/domain/interfaces/adapters/uuid.adapter.interface';
 import { ContactInformationMapper } from '../mappers/user/contactInformation.mapper';
+import { UserMapper } from '../mappers';
+import { Op, Transaction } from 'sequelize';
 import { PersonalInformationMapper } from '../mappers/user/personalInformation.mapper';
 import { Identifications, PersonTypes, TokenTypeCodes } from '#/infrastructure/interfaces';
-import { CreateAddressDto, CreateContactInformationDto, CreatePersonalInformationDto, CreateTokenDto } from '#/domain/dtos';
+import {
+  SaveAddressDto,
+  SaveContactInformationDto,
+  SavePersonalInformationDto,
+  SaveTokenDto,
+  UpdateAddressDto,
+  UpdateContactInformationDto,
+  UpdatePersonalInformationDto,
+} from '#/domain/dtos';
 
 export class UserDataSourceImpl implements UserDataSource {
   constructor(
@@ -32,12 +40,7 @@ export class UserDataSourceImpl implements UserDataSource {
     private readonly bcryptAdapter: UbcryptAdapter
   ) {}
 
-  async createUser({
-    createUserDto,
-    createAddressDto,
-    createContactInformationDto,
-    createPersonalInformationDto,
-  }: CreateUserDtos) {
+  async createUser({ createUserDto, createAddressDto, createContactInformationDto, createPersonalInformationDto }: SaveUserDtos) {
     const transaction = await sequelize.transaction({
       isolationLevel: Transaction.ISOLATION_LEVELS.READ_COMMITTED,
     });
@@ -91,7 +94,7 @@ export class UserDataSourceImpl implements UserDataSource {
   }
 
   private async createPersonalInformation(
-    createPersonalInformationDto: CreatePersonalInformationDto,
+    createPersonalInformationDto: SavePersonalInformationDto,
     userId: number,
     transaction: Transaction
   ) {
@@ -176,7 +179,7 @@ export class UserDataSourceImpl implements UserDataSource {
     return PersonalInformationMapper(personalInformation);
   }
 
-  private async createAddress(createAddressDto: CreateAddressDto, userId: number, transaction: Transaction) {
+  private async createAddress(createAddressDto: SaveAddressDto, userId: number, transaction: Transaction) {
     const country = await Country.findByPk(createAddressDto.countryId, { transaction });
     if (!country) throw CustomError.badRequest('Pais no encontrado.');
 
@@ -215,7 +218,7 @@ export class UserDataSourceImpl implements UserDataSource {
   }
 
   private async createContactInformation(
-    contactInformationDto: CreateContactInformationDto,
+    contactInformationDto: SaveContactInformationDto,
     userId: number,
     transaction: Transaction
   ) {
@@ -235,7 +238,7 @@ export class UserDataSourceImpl implements UserDataSource {
   private async createToken(userId: number, transaction: Transaction) {
     const tokenType = await TokenType.findOne({ where: { code: TokenTypeCodes.CONFIRM_EMAIL }, transaction });
 
-    const [errTokenDto, createTokenDto] = CreateTokenDto.create({
+    const [errTokenDto, createTokenDto] = SaveTokenDto.create({
       token: this.uidAdapter.generate(18),
       expire: this.momentAdapter.addTimes(15, units.DAY),
       used: false,
@@ -248,5 +251,199 @@ export class UserDataSourceImpl implements UserDataSource {
     const token = await Token.create(createTokenDto, { transaction });
 
     return TokenMapper(token);
+  }
+
+  async updateUser({ updateUserDto, updateAddressDto, updateContactInformationDto, updatePersonalInformationDto }: SaveUserDtos) {
+    const transaction = await sequelize.transaction({
+      isolationLevel: Transaction.ISOLATION_LEVELS.READ_COMMITTED,
+    });
+
+    try {
+      const user = await User.findByPk(updateUserDto.id, { transaction });
+
+      if (!user) throw CustomError.badRequest('User not exist');
+
+      const userExit = await User.findOne({
+        where: {
+          email: updateUserDto.email,
+          id: { [Op.ne]: user.id },
+        },
+        transaction,
+        lock: Transaction.LOCK.UPDATE,
+      });
+
+      if (userExit) throw CustomError.badRequest('User with this email already exist');
+
+      await user.update({ email: updateUserDto.email }, { transaction });
+      await user.reload({ transaction });
+
+      const [personalInformation, contactInformation, address] = await Promise.all([
+        this.updatePersonalInformation(updatePersonalInformationDto, user, transaction),
+        this.updateContactInformation(updateContactInformationDto, user, transaction),
+        this.updateAddress(updateAddressDto, user, transaction),
+      ]);
+
+      const userMapper = UserMapper(user);
+      userMapper.address = address;
+      userMapper.personalInformation = personalInformation;
+      userMapper.contactInformation = contactInformation;
+
+      await transaction.commit();
+
+      return userMapper;
+    } catch (error) {
+      console.log(error);
+      await transaction.rollback();
+      if (error instanceof CustomError) {
+        throw error;
+      }
+
+      throw CustomError.internal();
+    }
+  }
+
+  private async updatePersonalInformation(
+    updatePersonalInformationDto: UpdatePersonalInformationDto,
+    user: User,
+    transaction: Transaction
+  ) {
+    const personalInformation = await user.getPersonalInformation({ transaction });
+    if (!personalInformation) throw CustomError.notFound('Personal Information not found');
+
+    const identification = await Identification.findByPk(updatePersonalInformationDto.identificationId, { transaction });
+    if (!identification) throw CustomError.notFound('Identification not found');
+
+    let error: string | null = null;
+    const nit = Identifications.NIT === identification.code;
+    const nitForeign = Identifications.NIT_PAIS === identification.code;
+
+    if (nitForeign) {
+      error = updatePersonalInformationDto.validateForeign();
+    } else if (nit) {
+      error = updatePersonalInformationDto.validateNit();
+    } else {
+      const personType = await PersonType.findOne({
+        where: {
+          code: PersonTypes.PERSONA_NATURAL,
+        },
+        transaction,
+      });
+
+      if (!personType) throw CustomError.notFound('Person type not found');
+
+      updatePersonalInformationDto.personTypeId = personType.id;
+      error = updatePersonalInformationDto.validateNational();
+    }
+
+    if (error) throw CustomError.badRequest(error);
+
+    if (nit) {
+      const personType = await PersonType.findOne({
+        where: {
+          id: updatePersonalInformationDto.personTypeId,
+        },
+        transaction,
+      });
+
+      if (!personType) {
+        throw CustomError.notFound('Person type not found');
+      }
+    }
+
+    const personalInformationExist = await PersonalInformation.findOne({
+      where: {
+        documentNumber: updatePersonalInformationDto.documentNumber,
+        identificationId: updatePersonalInformationDto.identificationId,
+        id: { [Op.ne]: personalInformation.id },
+      },
+      transaction,
+      lock: Transaction.LOCK.UPDATE,
+    });
+
+    if (personalInformationExist) throw CustomError.badRequest('User with this document number and identification already exist');
+
+    await personalInformation.update(
+      {
+        dv: updatePersonalInformationDto.dv,
+        firstName: updatePersonalInformationDto.firstName,
+        middleName: updatePersonalInformationDto.middleName,
+        firstSurname: updatePersonalInformationDto.firstSurname,
+        secondSurname: updatePersonalInformationDto.secondSurname,
+        businessName: updatePersonalInformationDto.businessName,
+        documentNumber: updatePersonalInformationDto.documentNumber,
+        personTypeId: updatePersonalInformationDto.personTypeId,
+        taxLiabilityId: updatePersonalInformationDto.taxLiabilityId,
+        identificationId: updatePersonalInformationDto.identificationId,
+      },
+      { transaction }
+    );
+
+    await personalInformation.reload({ transaction });
+
+    return PersonalInformationMapper(personalInformation);
+  }
+
+  private async updateAddress(updateAddressDto: UpdateAddressDto, user: User, transaction: Transaction) {
+    const address = await user.getAddress({ transaction });
+    if (!address) throw CustomError.badRequest('Address no encontrado.');
+
+    const country = await Country.findByPk(updateAddressDto.countryId, { transaction });
+    if (!country) throw CustomError.badRequest('Pais no encontrado.');
+
+    let error: string | null = null;
+    const national = country.code === CountriesCodes.COLOMBIA;
+    if (national) {
+      error = updateAddressDto.validateNational();
+
+      const [state, municipality] = await Promise.all([
+        State.findByPk(updateAddressDto.stateId, { transaction }),
+        Municipality.findByPk(updateAddressDto.municipalityId, { transaction }),
+      ]);
+
+      if (!state || !municipality)
+        error += `${!state ? ', Departamento no encontrado.' : ''}${!municipality ? ', Municipio no encontrado.' : ''}`;
+    } else {
+      error = updateAddressDto.validateForeign();
+    }
+
+    if (error) throw CustomError.badRequest(error);
+
+    await address.update(
+      {
+        address: updateAddressDto.address,
+        stateId: updateAddressDto.stateId,
+        countryId: updateAddressDto.countryId,
+        stateName: updateAddressDto.stateName,
+        postalCode: updateAddressDto.postalCode,
+        municipalityId: updateAddressDto.municipalityId,
+      },
+      { transaction }
+    );
+
+    await address.reload({ transaction });
+
+    return AddressMapper(address);
+  }
+
+  private async updateContactInformation(
+    updateContactInformationDto: UpdateContactInformationDto,
+    user: User,
+    transaction: Transaction
+  ) {
+    const contactInformation = await user.getContactInformation({ transaction });
+    if (!contactInformation) throw CustomError.badRequest('Contact Information not fount');
+
+    await contactInformation.update(
+      {
+        mobile: updateContactInformationDto.mobile,
+        phoneOne: updateContactInformationDto.phoneOne,
+        phoneTwo: updateContactInformationDto.phoneTwo,
+      },
+      { transaction }
+    );
+
+    await contactInformation.reload({ transaction });
+
+    return ContactInformationMapper(contactInformation);
   }
 }

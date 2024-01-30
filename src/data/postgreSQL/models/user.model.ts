@@ -6,6 +6,7 @@ import {
   InferCreationAttributes,
   HasOneGetAssociationMixin,
 } from 'sequelize';
+import Address from './address.model';
 import { sequelize } from '../postgreSQL-database';
 import ContactInformation from './contact-information.model';
 import PersonalInformation from './personal-information.model';
@@ -22,13 +23,17 @@ export default class User extends Model<InferAttributes<User>, InferCreationAttr
   declare updatedAt: CreationOptional<Date>;
   declare deletedAt: CreationOptional<Date>;
 
-  declare personalInformation?: PersonalInformation;
-  declare getPersonalInformation: HasOneGetAssociationMixin<PersonalInformation>;
+  declare address?: Address;
+  declare getAddress: HasOneGetAssociationMixin<Address>;
 
   declare contactInformation?: ContactInformation;
   declare getContactInformation: HasOneGetAssociationMixin<ContactInformation>;
 
+  declare personalInformation?: PersonalInformation;
+  declare getPersonalInformation: HasOneGetAssociationMixin<PersonalInformation>;
+
   static associate(): void {
+    User.hasOne(Address, { as: 'address', sourceKey: 'id', foreignKey: 'userId' });
     User.hasOne(ContactInformation, { as: 'contactInformation', sourceKey: 'id', foreignKey: 'userId' });
     User.hasOne(PersonalInformation, { as: 'personalInformation', sourceKey: 'id', foreignKey: 'userId' });
   }

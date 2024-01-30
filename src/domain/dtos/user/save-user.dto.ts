@@ -8,7 +8,7 @@ interface Constructor {
   emailValidate: boolean;
 }
 
-export class CreateUserDto {
+export class SaveUserDto {
   email: Constructor['email'];
   active: Constructor['active'];
   password: Constructor['password'];
@@ -23,8 +23,8 @@ export class CreateUserDto {
     this.emailValidate = emailValidate;
   }
 
-  static create(object: Record<string, unknown>): [string?, CreateUserDto?] {
-    const [error, response] = Validator.validateObject<CreateUserDto>(this.getSchema(), object);
+  static create(object: Record<string, unknown>): [string?, SaveUserDto?] {
+    const [error, response] = Validator.validateObject<SaveUserDto>(this.getSchema(), object);
     if (error) {
       return [error];
     }
@@ -32,7 +32,7 @@ export class CreateUserDto {
     const { email, password } = response!;
     return [
       undefined,
-      new CreateUserDto({
+      new SaveUserDto({
         email,
         password,
         active: true,
