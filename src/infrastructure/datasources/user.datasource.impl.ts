@@ -9,28 +9,25 @@ import Municipality from '#/data/postgreSQL/models/municipality.model';
 import Identification from '#/data/postgreSQL/models/identification.model';
 import ContactInformation from '#/data/postgreSQL/models/contact-information.model';
 import PersonalInformation from '#/data/postgreSQL/models/personal-information.model';
+import { UserMapper } from '../mappers';
 import { UserDataSource } from '#/domain';
+import { Op, Transaction } from 'sequelize';
 import { sequelize } from '#/data/postgreSQL';
+import { SaveUserDtos } from '#/domain/interfaces';
 import { CustomError } from '#/domain/errors/custom.error';
 import { TokenMapper } from '../mappers/user/token.mapper';
 import { AddressMapper } from '../mappers/user/address.mapper';
-import { SaveUserDtos, SaveUserDtos } from '#/domain/interfaces';
 import { TimeAdapter, UbcryptAdapter, units } from '#/domain/interfaces';
 import { CountriesCodes } from '../interfaces/user/countries.interfaces';
 import { UuidAdapter } from '#/domain/interfaces/adapters/uuid.adapter.interface';
 import { ContactInformationMapper } from '../mappers/user/contactInformation.mapper';
-import { UserMapper } from '../mappers';
-import { Op, Transaction } from 'sequelize';
 import { PersonalInformationMapper } from '../mappers/user/personalInformation.mapper';
 import { Identifications, PersonTypes, TokenTypeCodes } from '#/infrastructure/interfaces';
 import {
+  SaveTokenDto,
   SaveAddressDto,
   SaveContactInformationDto,
   SavePersonalInformationDto,
-  SaveTokenDto,
-  UpdateAddressDto,
-  UpdateContactInformationDto,
-  UpdatePersonalInformationDto,
 } from '#/domain/dtos';
 
 export class UserDataSourceImpl implements UserDataSource {
@@ -38,9 +35,9 @@ export class UserDataSourceImpl implements UserDataSource {
     private readonly uidAdapter: UuidAdapter,
     private readonly momentAdapter: TimeAdapter,
     private readonly bcryptAdapter: UbcryptAdapter
-  ) {}
+  ) { }
 
-  async createUser({ createUserDto, createAddressDto, createContactInformationDto, createPersonalInformationDto }: SaveUserDtos) {
+  async createUser({ saveUserDto, saveAddressDto, saveContactInformationDto, savePersonalInformationDto }: SaveUserDtos) {
     const transaction = await sequelize.transaction({
       isolationLevel: Transaction.ISOLATION_LEVELS.READ_COMMITTED,
     });
@@ -48,7 +45,7 @@ export class UserDataSourceImpl implements UserDataSource {
     try {
       const userExit = await User.findOne({
         where: {
-          email: createUserDto.email,
+          email: saveUserDto.email,
         },
         transaction,
         lock: Transaction.LOCK.UPDATE,
@@ -60,20 +57,20 @@ export class UserDataSourceImpl implements UserDataSource {
 
       const user = await User.create(
         {
-          email: createUserDto.email,
-          active: createUserDto.active,
-          lastAccess: createUserDto.lastAccess,
-          emailValidate: createUserDto.emailValidate,
-          password: this.bcryptAdapter.encrypt(createUserDto.password, 10),
+          email: saveUserDto.email,
+          active: saveUserDto.active,
+          lastAccess: saveUserDto.lastAccess,
+          emailValidate: saveUserDto.emailValidate,
+          password: this.bcryptAdapter.encrypt(saveUserDto.password, 10),
         },
         { transaction }
       );
 
       await user.update({ uid: `US${user.id + 1000}` }, { transaction });
 
-      const personalInformation = await this.createPersonalInformation(createPersonalInformationDto, user.id, transaction);
-      const contactInformation = await this.createContactInformation(createContactInformationDto, user.id, transaction);
-      const address = await this.createAddress(createAddressDto, user.id, transaction);
+      const personalInformation = await this.createPersonalInformation(savePersonalInformationDto, user.id, transaction);
+      const contactInformation = await this.createContactInformation(saveContactInformationDto, user.id, transaction);
+      const address = await this.createAddress(saveAddressDto, user.id, transaction);
 
       const userMapper = UserMapper(user);
       userMapper.address = address;
@@ -94,11 +91,11 @@ export class UserDataSourceImpl implements UserDataSource {
   }
 
   private async createPersonalInformation(
-    createPersonalInformationDto: SavePersonalInformationDto,
+    savePersonalInformationDto: SavePersonalInformationDto,
     userId: number,
     transaction: Transaction
   ) {
-    const identification = await Identification.findByPk(createPersonalInformationDto.identificationId, {
+    const identification = await Identification.findByPk(savePersonalInformationDto.identificationId, {
       transaction,
     });
 
@@ -110,9 +107,9 @@ export class UserDataSourceImpl implements UserDataSource {
     const nit = Identifications.NIT === identification.code;
     const nitForeign = Identifications.NIT_PAIS === identification.code;
     if (nitForeign) {
-      error = createPersonalInformationDto.validateForeign();
+      error = savePersonalInformationDto.validateForeign();
     } else if (nit) {
-      error = createPersonalInformationDto.validateNit();
+      error = savePersonalInformationDto.validateNit();
     } else {
       const personType = await PersonType.findOne({
         where: {
@@ -125,8 +122,8 @@ export class UserDataSourceImpl implements UserDataSource {
         throw CustomError.notFound('Person type not found');
       }
 
-      createPersonalInformationDto.personTypeId = personType.id;
-      error = createPersonalInformationDto.validateNational();
+      savePersonalInformationDto.personTypeId = personType.id;
+      error = savePersonalInformationDto.validateNational();
     }
 
     if (error) {
@@ -136,7 +133,7 @@ export class UserDataSourceImpl implements UserDataSource {
     if (nit) {
       const personType = await PersonType.findOne({
         where: {
-          id: createPersonalInformationDto.personTypeId,
+          id: savePersonalInformationDto.personTypeId,
         },
         transaction,
       });
@@ -148,8 +145,8 @@ export class UserDataSourceImpl implements UserDataSource {
 
     const personalInformationExist = await PersonalInformation.findOne({
       where: {
-        documentNumber: createPersonalInformationDto.documentNumber,
-        identificationId: createPersonalInformationDto.identificationId,
+        documentNumber: savePersonalInformationDto.documentNumber,
+        identificationId: savePersonalInformationDto.identificationId,
       },
       transaction,
       lock: Transaction.LOCK.UPDATE,
@@ -161,16 +158,16 @@ export class UserDataSourceImpl implements UserDataSource {
 
     const personalInformation = await PersonalInformation.create(
       {
-        dv: createPersonalInformationDto.dv,
-        firstName: createPersonalInformationDto.firstName,
-        middleName: createPersonalInformationDto.middleName,
-        firstSurname: createPersonalInformationDto.firstSurname,
-        secondSurname: createPersonalInformationDto.secondSurname,
-        businessName: createPersonalInformationDto.businessName,
-        documentNumber: createPersonalInformationDto.documentNumber,
-        personTypeId: createPersonalInformationDto.personTypeId,
-        taxLiabilityId: createPersonalInformationDto.taxLiabilityId,
-        identificationId: createPersonalInformationDto.identificationId,
+        dv: savePersonalInformationDto.dv,
+        firstName: savePersonalInformationDto.firstName,
+        middleName: savePersonalInformationDto.middleName,
+        firstSurname: savePersonalInformationDto.firstSurname,
+        secondSurname: savePersonalInformationDto.secondSurname,
+        businessName: savePersonalInformationDto.businessName,
+        documentNumber: savePersonalInformationDto.documentNumber,
+        personTypeId: savePersonalInformationDto.personTypeId,
+        taxLiabilityId: savePersonalInformationDto.taxLiabilityId,
+        identificationId: savePersonalInformationDto.identificationId,
         userId,
       },
       { transaction }
@@ -179,36 +176,36 @@ export class UserDataSourceImpl implements UserDataSource {
     return PersonalInformationMapper(personalInformation);
   }
 
-  private async createAddress(createAddressDto: SaveAddressDto, userId: number, transaction: Transaction) {
-    const country = await Country.findByPk(createAddressDto.countryId, { transaction });
+  private async createAddress(saveAddressDto: SaveAddressDto, userId: number, transaction: Transaction) {
+    const country = await Country.findByPk(saveAddressDto.countryId, { transaction });
     if (!country) throw CustomError.badRequest('Pais no encontrado.');
 
     let error: string | null = null;
     const national = country.code === CountriesCodes.COLOMBIA;
     if (national) {
-      error = createAddressDto.validateNational();
+      error = saveAddressDto.validateNational();
 
       const [state, municipality] = await Promise.all([
-        State.findByPk(createAddressDto.stateId, { transaction }),
-        Municipality.findByPk(createAddressDto.municipalityId, { transaction }),
+        State.findByPk(saveAddressDto.stateId, { transaction }),
+        Municipality.findByPk(saveAddressDto.municipalityId, { transaction }),
       ]);
 
       if (!state || !municipality)
         error += `${!state ? ', Departamento no encontrado.' : ''}${!municipality ? ', Municipio no encontrado.' : ''}`;
     } else {
-      error = createAddressDto.validateForeign();
+      error = saveAddressDto.validateForeign();
     }
 
     if (error) throw CustomError.badRequest(error);
 
     const address = await Address.create(
       {
-        address: createAddressDto.address,
-        stateId: createAddressDto.stateId,
-        countryId: createAddressDto.countryId,
-        stateName: createAddressDto.stateName,
-        postalCode: createAddressDto.postalCode,
-        municipalityId: createAddressDto.municipalityId,
+        address: saveAddressDto.address,
+        stateId: saveAddressDto.stateId,
+        countryId: saveAddressDto.countryId,
+        stateName: saveAddressDto.stateName,
+        postalCode: saveAddressDto.postalCode,
+        municipalityId: saveAddressDto.municipalityId,
         userId,
       },
       { transaction }
@@ -253,19 +250,21 @@ export class UserDataSourceImpl implements UserDataSource {
     return TokenMapper(token);
   }
 
-  async updateUser({ updateUserDto, updateAddressDto, updateContactInformationDto, updatePersonalInformationDto }: SaveUserDtos) {
+  async updateUser({ saveUserDto, saveAddressDto, saveContactInformationDto, savePersonalInformationDto }: SaveUserDtos) {
     const transaction = await sequelize.transaction({
       isolationLevel: Transaction.ISOLATION_LEVELS.READ_COMMITTED,
     });
 
     try {
-      const user = await User.findByPk(updateUserDto.id, { transaction });
+      const error = saveUserDto.validateUpdate();
+      if (error) throw CustomError.badRequest(error);
 
+      const user = await User.findByPk(saveUserDto.id, { transaction });
       if (!user) throw CustomError.badRequest('User not exist');
 
       const userExit = await User.findOne({
         where: {
-          email: updateUserDto.email,
+          email: saveUserDto.email,
           id: { [Op.ne]: user.id },
         },
         transaction,
@@ -274,13 +273,13 @@ export class UserDataSourceImpl implements UserDataSource {
 
       if (userExit) throw CustomError.badRequest('User with this email already exist');
 
-      await user.update({ email: updateUserDto.email }, { transaction });
+      await user.update({ email: saveUserDto.email }, { transaction });
       await user.reload({ transaction });
 
       const [personalInformation, contactInformation, address] = await Promise.all([
-        this.updatePersonalInformation(updatePersonalInformationDto, user, transaction),
-        this.updateContactInformation(updateContactInformationDto, user, transaction),
-        this.updateAddress(updateAddressDto, user, transaction),
+        this.updatePersonalInformation(savePersonalInformationDto, user, transaction),
+        this.updateContactInformation(saveContactInformationDto, user, transaction),
+        this.updateAddress(saveAddressDto, user, transaction),
       ]);
 
       const userMapper = UserMapper(user);
@@ -303,14 +302,14 @@ export class UserDataSourceImpl implements UserDataSource {
   }
 
   private async updatePersonalInformation(
-    updatePersonalInformationDto: UpdatePersonalInformationDto,
+    savePersonalInformationDto: SavePersonalInformationDto,
     user: User,
     transaction: Transaction
   ) {
     const personalInformation = await user.getPersonalInformation({ transaction });
     if (!personalInformation) throw CustomError.notFound('Personal Information not found');
 
-    const identification = await Identification.findByPk(updatePersonalInformationDto.identificationId, { transaction });
+    const identification = await Identification.findByPk(savePersonalInformationDto.identificationId, { transaction });
     if (!identification) throw CustomError.notFound('Identification not found');
 
     let error: string | null = null;
@@ -318,9 +317,9 @@ export class UserDataSourceImpl implements UserDataSource {
     const nitForeign = Identifications.NIT_PAIS === identification.code;
 
     if (nitForeign) {
-      error = updatePersonalInformationDto.validateForeign();
+      error = savePersonalInformationDto.validateForeign();
     } else if (nit) {
-      error = updatePersonalInformationDto.validateNit();
+      error = savePersonalInformationDto.validateNit();
     } else {
       const personType = await PersonType.findOne({
         where: {
@@ -331,8 +330,8 @@ export class UserDataSourceImpl implements UserDataSource {
 
       if (!personType) throw CustomError.notFound('Person type not found');
 
-      updatePersonalInformationDto.personTypeId = personType.id;
-      error = updatePersonalInformationDto.validateNational();
+      savePersonalInformationDto.personTypeId = personType.id;
+      error = savePersonalInformationDto.validateNational();
     }
 
     if (error) throw CustomError.badRequest(error);
@@ -340,7 +339,7 @@ export class UserDataSourceImpl implements UserDataSource {
     if (nit) {
       const personType = await PersonType.findOne({
         where: {
-          id: updatePersonalInformationDto.personTypeId,
+          id: savePersonalInformationDto.personTypeId,
         },
         transaction,
       });
@@ -352,8 +351,8 @@ export class UserDataSourceImpl implements UserDataSource {
 
     const personalInformationExist = await PersonalInformation.findOne({
       where: {
-        documentNumber: updatePersonalInformationDto.documentNumber,
-        identificationId: updatePersonalInformationDto.identificationId,
+        documentNumber: savePersonalInformationDto.documentNumber,
+        identificationId: savePersonalInformationDto.identificationId,
         id: { [Op.ne]: personalInformation.id },
       },
       transaction,
@@ -364,16 +363,16 @@ export class UserDataSourceImpl implements UserDataSource {
 
     await personalInformation.update(
       {
-        dv: updatePersonalInformationDto.dv,
-        firstName: updatePersonalInformationDto.firstName,
-        middleName: updatePersonalInformationDto.middleName,
-        firstSurname: updatePersonalInformationDto.firstSurname,
-        secondSurname: updatePersonalInformationDto.secondSurname,
-        businessName: updatePersonalInformationDto.businessName,
-        documentNumber: updatePersonalInformationDto.documentNumber,
-        personTypeId: updatePersonalInformationDto.personTypeId,
-        taxLiabilityId: updatePersonalInformationDto.taxLiabilityId,
-        identificationId: updatePersonalInformationDto.identificationId,
+        dv: savePersonalInformationDto.dv,
+        firstName: savePersonalInformationDto.firstName,
+        middleName: savePersonalInformationDto.middleName,
+        firstSurname: savePersonalInformationDto.firstSurname,
+        secondSurname: savePersonalInformationDto.secondSurname,
+        businessName: savePersonalInformationDto.businessName,
+        documentNumber: savePersonalInformationDto.documentNumber,
+        personTypeId: savePersonalInformationDto.personTypeId,
+        taxLiabilityId: savePersonalInformationDto.taxLiabilityId,
+        identificationId: savePersonalInformationDto.identificationId,
       },
       { transaction }
     );
@@ -383,39 +382,39 @@ export class UserDataSourceImpl implements UserDataSource {
     return PersonalInformationMapper(personalInformation);
   }
 
-  private async updateAddress(updateAddressDto: UpdateAddressDto, user: User, transaction: Transaction) {
+  private async updateAddress(saveAddressDto: SaveAddressDto, user: User, transaction: Transaction) {
     const address = await user.getAddress({ transaction });
     if (!address) throw CustomError.badRequest('Address no encontrado.');
 
-    const country = await Country.findByPk(updateAddressDto.countryId, { transaction });
+    const country = await Country.findByPk(saveAddressDto.countryId, { transaction });
     if (!country) throw CustomError.badRequest('Pais no encontrado.');
 
     let error: string | null = null;
     const national = country.code === CountriesCodes.COLOMBIA;
     if (national) {
-      error = updateAddressDto.validateNational();
+      error = saveAddressDto.validateNational();
 
       const [state, municipality] = await Promise.all([
-        State.findByPk(updateAddressDto.stateId, { transaction }),
-        Municipality.findByPk(updateAddressDto.municipalityId, { transaction }),
+        State.findByPk(saveAddressDto.stateId, { transaction }),
+        Municipality.findByPk(saveAddressDto.municipalityId, { transaction }),
       ]);
 
       if (!state || !municipality)
         error += `${!state ? ', Departamento no encontrado.' : ''}${!municipality ? ', Municipio no encontrado.' : ''}`;
     } else {
-      error = updateAddressDto.validateForeign();
+      error = saveAddressDto.validateForeign();
     }
 
     if (error) throw CustomError.badRequest(error);
 
     await address.update(
       {
-        address: updateAddressDto.address,
-        stateId: updateAddressDto.stateId,
-        countryId: updateAddressDto.countryId,
-        stateName: updateAddressDto.stateName,
-        postalCode: updateAddressDto.postalCode,
-        municipalityId: updateAddressDto.municipalityId,
+        address: saveAddressDto.address,
+        stateId: saveAddressDto.stateId,
+        countryId: saveAddressDto.countryId,
+        stateName: saveAddressDto.stateName,
+        postalCode: saveAddressDto.postalCode,
+        municipalityId: saveAddressDto.municipalityId,
       },
       { transaction }
     );
@@ -426,7 +425,7 @@ export class UserDataSourceImpl implements UserDataSource {
   }
 
   private async updateContactInformation(
-    updateContactInformationDto: UpdateContactInformationDto,
+    saveContactInformationDto: SaveContactInformationDto,
     user: User,
     transaction: Transaction
   ) {
@@ -435,9 +434,9 @@ export class UserDataSourceImpl implements UserDataSource {
 
     await contactInformation.update(
       {
-        mobile: updateContactInformationDto.mobile,
-        phoneOne: updateContactInformationDto.phoneOne,
-        phoneTwo: updateContactInformationDto.phoneTwo,
+        mobile: saveContactInformationDto.mobile,
+        phoneOne: saveContactInformationDto.phoneOne,
+        phoneTwo: saveContactInformationDto.phoneTwo,
       },
       { transaction }
     );

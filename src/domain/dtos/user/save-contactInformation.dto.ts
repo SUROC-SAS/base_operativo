@@ -17,7 +17,7 @@ export class SaveContactInformationDto {
     this.phoneTwo = phoneTwo;
   }
 
-  static create(object: Record<string, unknown>): [string?, SaveContactInformationDto?] {
+  static save(object: Record<string, unknown>): [string?, SaveContactInformationDto?] {
     const [error, response] = Validator.validateObject<SaveContactInformationDto>(this.getSchema(), object);
     if (error) {
       return [error];

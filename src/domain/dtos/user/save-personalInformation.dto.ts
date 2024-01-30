@@ -49,7 +49,7 @@ export class SavePersonalInformationDto {
     this.personTypeId = personTypeId;
   }
 
-  static create(object: Record<string, unknown>): [string?, SavePersonalInformationDto?] {
+  static save(object: Record<string, unknown>): [string?, SavePersonalInformationDto?] {
     const [error, response] = Validator.validateObject<SavePersonalInformationDto>(this.getSchema(), object);
     if (error) {
       return [error];

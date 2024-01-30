@@ -1,14 +1,14 @@
 import { UserDataSource, UserRepository } from '#/domain';
-import { SaveUserDtos, SaveUserDtos, User } from '#/domain/interfaces';
+import { SaveUserDtos, User } from '#/domain/interfaces';
 
 export class UserRepositoryImpl implements UserRepository {
-  constructor(private readonly userDataSource: UserDataSource) {}
+  constructor(private readonly userDataSource: UserDataSource) { }
 
-  async createUser(createUserDtos: SaveUserDtos): Promise<User> {
-    return this.userDataSource.createUser(createUserDtos);
+  async createUser(saveUserDtos: SaveUserDtos): Promise<User> {
+    return this.userDataSource.createUser(saveUserDtos);
   }
 
-  async updateUser(updateUserDtos: SaveUserDtos): Promise<User> {
-    return this.userDataSource.updateUser(updateUserDtos);
+  async updateUser(saveUserDtos: SaveUserDtos): Promise<User> {
+    return this.userDataSource.updateUser(saveUserDtos);
   }
 }

@@ -13,8 +13,8 @@ export interface User {
 }
 
 export interface SaveUserDtos {
-  createUserDto: SaveUserDto;
-  createAddressDto: SaveAddressDto;
-  createContactInformationDto: SaveContactInformationDto;
-  createPersonalInformationDto: SavePersonalInformationDto;
+  saveUserDto: SaveUserDto;
+  saveAddressDto: SaveAddressDto;
+  saveContactInformationDto: SaveContactInformationDto;
+  savePersonalInformationDto: SavePersonalInformationDto;
 }

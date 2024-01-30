@@ -26,7 +26,7 @@ export class SaveAddressDto {
     this.stateName = stateName;
   }
 
-  static create(object: Record<string, unknown>): [string?, SaveAddressDto?] {
+  static save(object: Record<string, unknown>): [string?, SaveAddressDto?] {
     const [error, response] = Validator.validateObject<SaveAddressDto>(this.getSchema(), object);
     if (error) return [error];
 
