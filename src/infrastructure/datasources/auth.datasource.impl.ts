@@ -1,10 +1,9 @@
+import User from '#/data/postgreSQL/models/user.model';
 import { AuthDto } from '#/domain/dtos';
 import { Transaction } from 'sequelize';
 import { UserMapper } from '../mappers';
 import { AuthDataSource } from '#/domain';
 import { sequelize } from '#/data/postgreSQL';
-import { User as IUser } from '#/domain/interfaces';
-import User from '#/data/postgreSQL/models/user.model';
 import { CustomError } from '#/domain/errors/custom.error';
 import { JWTAdapter } from '#/domain/interfaces/adapters/jwt.adapter.interface';
 import { UbcryptAdapter } from '#/domain/interfaces/adapters/bcrypt.adapter.interface';
@@ -55,7 +54,7 @@ export class AuthDataSourceImpl implements AuthDataSource {
     }
   }
 
-  async authWithToken({ email }: Record<string, unknown>): Promise<IUser> {
+  async authWithToken({ email }: Record<string, unknown>) {
     const transaction = await sequelize.transaction({
       isolationLevel: Transaction.ISOLATION_LEVELS.READ_COMMITTED,
     });

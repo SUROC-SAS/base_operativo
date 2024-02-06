@@ -15,4 +15,5 @@ export const envs = {
   SMTP_PORT: get('SMTP_PORT').required().asPortNumber(),
   SMTP_PASSWORD: get('SMTP_PASSWORD').required().asString(),
   DOMAIN_ALLOWED: get('DOMAIN_ALLOWED').required().asString(),
+  FRONTEND_URL: get('FRONTEND_URL').required().asString(),
 };

@@ -13,7 +13,7 @@ import { UserMapper } from '../mappers';
 import { Transaction } from 'sequelize';
 import { UserDataSource } from '#/domain';
 import { sequelize } from '#/data/postgreSQL';
-import { CreateUserDtos } from '#/domain/interfaces';
+import { CreateUserDtos, Identifications } from '#/domain/interfaces';
 import { CustomError } from '#/domain/errors/custom.error';
 import { TokenMapper } from '../mappers/user/token.mapper';
 import { AddressMapper } from '../mappers/user/address.mapper';
@@ -22,15 +22,16 @@ import { CountriesCodes } from '../interfaces/user/countries.interfaces';
 import { UuidAdapter } from '#/domain/interfaces/adapters/uuid.adapter.interface';
 import { ContactInformationMapper } from '../mappers/user/contactInformation.mapper';
 import { PersonalInformationMapper } from '../mappers/user/personalInformation.mapper';
-import { Identifications, PersonTypes, TokenTypeCodes } from '#/infrastructure/interfaces';
+import { PersonTypes, TokenTypeCodes } from '#/infrastructure/interfaces';
 import { CreateAddressDto, CreateContactInformationDto, CreatePersonalInformationDto, CreateTokenDto } from '#/domain/dtos';
+import { AddressEntity, PersonalInformationEntity } from '#/domain/entities/user';
 
 export class UserDataSourceImpl implements UserDataSource {
   constructor(
     private readonly uidAdapter: UuidAdapter,
     private readonly momentAdapter: TimeAdapter,
     private readonly bcryptAdapter: UbcryptAdapter
-  ) {}
+  ) { }
 
   async createUser({
     createUserDto,
@@ -71,8 +72,10 @@ export class UserDataSourceImpl implements UserDataSource {
       const personalInformation = await this.createPersonalInformation(createPersonalInformationDto, user.id, transaction);
       const contactInformation = await this.createContactInformation(createContactInformationDto, user.id, transaction);
       const address = await this.createAddress(createAddressDto, user.id, transaction);
+      const token = await this.createToken(user.id, transaction);
 
       const userMapper = UserMapper(user);
+      userMapper.token = [token];
       userMapper.address = address;
       userMapper.personalInformation = personalInformation;
       userMapper.contactInformation = contactInformation;
@@ -103,14 +106,22 @@ export class UserDataSourceImpl implements UserDataSource {
       throw CustomError.notFound('Identification not found');
     }
 
-    let error: string | null = null;
+    if (createPersonalInformationDto.personTypeId) {
+      const personType = await PersonType.findOne({
+        where: {
+          id: createPersonalInformationDto.personTypeId,
+        },
+        transaction,
+      });
+
+      if (!personType) {
+        throw CustomError.notFound('Person type not found');
+      }
+    }
+
     const nit = Identifications.NIT === identification.code;
     const nitForeign = Identifications.NIT_PAIS === identification.code;
-    if (nitForeign) {
-      error = createPersonalInformationDto.validateForeign();
-    } else if (nit) {
-      error = createPersonalInformationDto.validateNit();
-    } else {
+    if (!nit && !nitForeign) {
       const personType = await PersonType.findOne({
         where: {
           code: PersonTypes.PERSONA_NATURAL,
@@ -123,24 +134,11 @@ export class UserDataSourceImpl implements UserDataSource {
       }
 
       createPersonalInformationDto.personTypeId = personType.id;
-      error = createPersonalInformationDto.validateNational();
     }
 
+    const error: string | null = PersonalInformationEntity.validateDto(createPersonalInformationDto, <Identifications>identification.code);
     if (error) {
       throw CustomError.badRequest(error);
-    }
-
-    if (nit) {
-      const personType = await PersonType.findOne({
-        where: {
-          id: createPersonalInformationDto.personTypeId,
-        },
-        transaction,
-      });
-
-      if (!personType) {
-        throw CustomError.notFound('Person type not found');
-      }
     }
 
     const personalInformationExist = await PersonalInformation.findOne({
@@ -182,22 +180,19 @@ export class UserDataSourceImpl implements UserDataSource {
 
     let error: string | null = null;
     const national = country.code === CountriesCodes.COLOMBIA;
+    error = AddressEntity.validateDto(createAddressDto, national);
     if (national) {
-      error = createAddressDto.validateNational();
-
       const [state, municipality] = await Promise.all([
-        State.findByPk(createAddressDto.stateId, { transaction }),
-        Municipality.findByPk(createAddressDto.municipalityId, { transaction }),
+        State.findByPk(createAddressDto.stateId!, { transaction }),
+        Municipality.findByPk(createAddressDto.municipalityId!, { transaction }),
       ]);
 
-      if (!state || !municipality)
+      if (!state || !municipality) {
         error += `${!state ? ', Departamento no encontrado.' : ''}${!municipality ? ', Municipio no encontrado.' : ''}`;
-    } else {
-      error = createAddressDto.validateForeign();
+      }
     }
 
     if (error) throw CustomError.badRequest(error);
-
     const address = await Address.create(
       {
         address: createAddressDto.address,
@@ -234,19 +229,19 @@ export class UserDataSourceImpl implements UserDataSource {
 
   private async createToken(userId: number, transaction: Transaction) {
     const tokenType = await TokenType.findOne({ where: { code: TokenTypeCodes.CONFIRM_EMAIL }, transaction });
+    if (!tokenType) throw CustomError.notFound('Token type not found');
 
     const [errTokenDto, createTokenDto] = CreateTokenDto.create({
       token: this.uidAdapter.generate(18),
       expire: this.momentAdapter.addTimes(15, units.DAY),
       used: false,
-      tokenTypeId: tokenType!.id,
       userId,
+      tokenTypeId: tokenType.id,
     });
 
     if (errTokenDto) throw CustomError.internal();
 
     const token = await Token.create(createTokenDto, { transaction });
-
     return TokenMapper(token);
   }
 }

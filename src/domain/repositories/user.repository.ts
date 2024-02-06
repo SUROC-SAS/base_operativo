@@ -1,5 +1,6 @@
-import { CreateUserDtos, User } from '../interfaces';
+import { UserEntity } from '../entities/user/user.entity';
+import { CreateUserDtos } from '../interfaces';
 
 export abstract class UserRepository {
-  abstract createUser(createUserDtos: CreateUserDtos): Promise<User>;
+  abstract createUser(createUserDtos: CreateUserDtos): Promise<UserEntity>;
 }

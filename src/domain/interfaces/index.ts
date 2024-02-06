@@ -4,6 +4,7 @@ export * from './user/address';
 export * from './user/token-type';
 export * from './user/contactInformation';
 export * from './user/personalInformation';
+export * from './user/identification.interfaces';
 export * from './adapters/jwt.adapter.interface';
 export * from './adapters/time.adapter.interface';
 export * from './adapters/uuid.adapter.interface';

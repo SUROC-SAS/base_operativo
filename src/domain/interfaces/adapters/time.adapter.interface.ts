@@ -1,9 +1,9 @@
 export enum units {
-  YEAR = 'year',
-  MONTH = 'month',
-  WEEK = 'week',
   DAY = 'day',
   HOUR = 'hour',
+  WEEK = 'week',
+  YEAR = 'year',
+  MONTH = 'month',
   MINUTE = 'minute',
   SECOND = 'second',
   MILISECOND = 'millisecond',

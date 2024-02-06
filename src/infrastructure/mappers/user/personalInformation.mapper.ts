@@ -1,7 +1,7 @@
 import { CustomError } from '#/domain/errors/custom.error';
-import { PersonalInformation } from '#/domain/interfaces/user/personalInformation';
+import { PersonalInformationEntity } from '#/domain/entities/user/personal-information.entity';
 
-export const PersonalInformationMapper = (model: Record<string, any>): PersonalInformation => {
+export const PersonalInformationMapper = (model: Record<string, any>): PersonalInformationEntity => {
   const {
     id,
     dv,
@@ -20,7 +20,7 @@ export const PersonalInformationMapper = (model: Record<string, any>): PersonalI
     throw CustomError.badRequest('User id is required');
   }
 
-  return {
+  return new PersonalInformationEntity({
     id,
     dv,
     firstName,
@@ -32,5 +32,5 @@ export const PersonalInformationMapper = (model: Record<string, any>): PersonalI
     documentNumber,
     taxLiabilityId,
     identificationId,
-  };
+  });
 };

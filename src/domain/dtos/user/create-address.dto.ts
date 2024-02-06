@@ -46,42 +46,11 @@ export class CreateAddressDto {
   }
 
   static getSchema = (): Record<string, unknown> => ({
-    stateId: GENERATOR.number().nullable().default(null),
-    address: GENERATOR.string().trim().nullable().default(null),
-    stateName: GENERATOR.string().trim().nullable().default(null),
-    countryId: GENERATOR.string().trim().nullable().default(null),
-    postalCode: GENERATOR.string().trim().nullable().default(null),
-    municipalityId: GENERATOR.string().trim().nullable().default(null),
+    address: GENERATOR.string().trim().required(),
+    stateName: GENERATOR.string().trim().nullable(),
+    postalCode: GENERATOR.string().trim().required(),
+    stateId: GENERATOR.number().nullable(),
+    countryId: GENERATOR.string().trim().required(),
+    municipalityId: GENERATOR.string().trim().nullable(),
   });
-
-  validateForeign(): string | null {
-    const error: string[] = [];
-    if (!this.address) error.push('Missing address');
-    if (!this.stateName) error.push('Missing stateName');
-    if (!this.countryId) error.push('Missing countryId');
-
-    if (error.length) {
-      const message = new Intl.ListFormat('en').format(error);
-      return message.toString();
-    }
-
-    return null;
-  }
-
-  validateNational(): string | null {
-    const error: string[] = [];
-    if (!this.address) error.push('Missing address');
-    if (!this.postalCode) error.push('Missing postalCode');
-    if (!this.stateName) error.push('Missing stateName');
-    if (!this.municipalityId) error.push('Missing municipalityId');
-    if (!this.stateId) error.push('Missing stateId');
-    if (!this.countryId) error.push('Missing countryId');
-
-    if (error.length) {
-      const message = new Intl.ListFormat('en').format(error);
-      return message.toString();
-    }
-
-    return null;
-  }
 }

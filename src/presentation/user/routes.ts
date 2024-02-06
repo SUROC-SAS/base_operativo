@@ -1,7 +1,7 @@
 import { envs } from '#/config';
 import { Router } from 'express';
 import { UserController } from './controller';
-import EmailService from '../services/email.service';
+import EmailService from '../services/email/email.service';
 import { UidAdapter } from '#/config/adapters/uid.adapter';
 import { MomentAdapter } from '#/config/adapters/moment.adapter';
 import { BcryptAdapter } from '#/config/adapters/bcrypt.adapter';
