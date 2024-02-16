@@ -19,14 +19,7 @@ export class AddressEntity {
   postalCode: string;
   municipalityId?: number;
 
-  constructor({
-    id,
-    address,
-    stateId,
-    countryId,
-    postalCode,
-    municipalityId,
-  }: Constructor) {
+  constructor({ id, address, stateId, countryId, postalCode, municipalityId }: Constructor) {
     this.id = id;
     this.address = address;
     this.stateId = stateId;

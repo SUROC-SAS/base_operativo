@@ -2,10 +2,10 @@ import fs from 'fs';
 import hbs from 'handlebars';
 import Mail from 'nodemailer/lib/mailer';
 import mjml2html from 'mjml';
-import { resolve } from 'path';
-import { MailService } from '#/domain/interfaces/services/email.service';
 import nodemailer, { SendMailOptions } from 'nodemailer';
 import { envs } from '#/config';
+import { resolve } from 'path';
+import { Email } from '#/domain/interfaces/services/email.service';
 
 interface OptionsEmail {
   host: string;
@@ -16,15 +16,15 @@ interface OptionsEmail {
 
 const { FRONTEND_URL: DOMAIN_FRONTEND } = envs;
 
-class EmailService implements MailService {
-  private readonly _transport: Mail;
-  private _fromEmail = process.env.EMAIL_ADMIN;
+class EmailService implements Email {
+  private readonly transport: Mail;
+  private adminEmail = envs.ADMIN_EMAIL;
 
   constructor({ host, user, pass, port }: OptionsEmail) {
-    this._transport = nodemailer.createTransport({
+    this.transport = nodemailer.createTransport({
       host,
       port,
-      secure: true,
+      secure: false,
       auth: {
         user,
         pass,
@@ -37,7 +37,18 @@ class EmailService implements MailService {
   }
 
   prepareHtml(templateName: string, data: { [k: string]: unknown }) {
-    const template = resolve(__dirname, '..', '..', '..', '..', 'src', 'presentation', 'services', 'email', `templates/${templateName}.mjml`);
+    const template = resolve(
+      __dirname,
+      '..',
+      '..',
+      '..',
+      '..',
+      'src',
+      'presentation',
+      'services',
+      'email',
+      `templates/${templateName}.mjml`
+    );
     const filePath = resolve(__dirname, '..', '..', '..', '..', 'src', 'presentation', 'services', 'email', 'templates');
     const compileTemplate = hbs.compile(fs.readFileSync(template, 'utf-8'));
     return mjml2html(compileTemplate(data), { filePath }).html;
@@ -45,13 +56,13 @@ class EmailService implements MailService {
 
   async sendEmail(subject: string, recipients: string | string[], html: string) {
     const mailOptions: SendMailOptions = {
-      from: this._fromEmail,
+      from: this.adminEmail,
       to: recipients.toString(),
       subject,
       html,
     };
 
-    const sendEmail = await this._transport.sendMail(mailOptions);
+    const sendEmail = await this.transport.sendMail(mailOptions);
     console.log('Message sent: %s', sendEmail.messageId);
   }
 }

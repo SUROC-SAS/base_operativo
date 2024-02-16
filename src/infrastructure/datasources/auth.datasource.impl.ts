@@ -12,7 +12,7 @@ export class AuthDataSourceImpl implements AuthDataSource {
   constructor(
     private readonly jwtAdapter: JWTAdapter,
     private readonly bcryptAdapter: UbcryptAdapter
-  ) { }
+  ) {}
 
   async auth({ email, password }: AuthDto): Promise<string> {
     const transaction = await sequelize.transaction({
@@ -42,7 +42,6 @@ export class AuthDataSourceImpl implements AuthDataSource {
         uid: user.uid,
         email: email.toLocaleLowerCase(),
       });
-
     } catch (error) {
       console.log(error);
       await transaction.rollback();

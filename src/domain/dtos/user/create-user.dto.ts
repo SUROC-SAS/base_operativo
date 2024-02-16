@@ -1,4 +1,4 @@
-import { GENERATOR, Validator } from '#/config/validator';
+import { GENERATOR, Validator } from '#/config/adapters/validator';
 
 interface Constructor {
   email: string;

@@ -9,11 +9,11 @@ import Municipality from '#/data/postgreSQL/models/municipality.model';
 import Identification from '#/data/postgreSQL/models/identification.model';
 import ContactInformation from '#/data/postgreSQL/models/contact-information.model';
 import PersonalInformation from '#/data/postgreSQL/models/personal-information.model';
-import { UserMapper } from '../mappers';
-import { Transaction } from 'sequelize';
+import { AssignRoleMapper, UserMapper } from '../mappers';
+import { Op, Transaction } from 'sequelize';
 import { UserDataSource } from '#/domain';
 import { sequelize } from '#/data/postgreSQL';
-import { CreateUserDtos, Identifications } from '#/domain/interfaces';
+import { CreateUserDtos, Email, Identifications } from '#/domain/interfaces';
 import { CustomError } from '#/domain/errors/custom.error';
 import { TokenMapper } from '../mappers/user/token.mapper';
 import { AddressMapper } from '../mappers/user/address.mapper';
@@ -23,11 +23,20 @@ import { UuidAdapter } from '#/domain/interfaces/adapters/uuid.adapter.interface
 import { ContactInformationMapper } from '../mappers/user/contactInformation.mapper';
 import { PersonalInformationMapper } from '../mappers/user/personalInformation.mapper';
 import { PersonTypes, TokenTypeCodes } from '#/infrastructure/interfaces';
-import { CreateAddressDto, CreateContactInformationDto, CreatePersonalInformationDto, CreateTokenDto } from '#/domain/dtos';
-import { AddressEntity, PersonalInformationEntity } from '#/domain/entities/user';
+import {
+  AssignRoleDto,
+  CreateAddressDto,
+  CreateContactInformationDto,
+  CreatePersonalInformationDto,
+  CreateTokenDto,
+} from '#/domain/dtos';
+import { AddressEntity, PersonalInformationEntity, UserEntity } from '#/domain/entities/user';
+import Role from '#/data/postgreSQL/models/role.model';
+import AssignedRole from '#/data/postgreSQL/models/assigned-role.model';
 
 export class UserDataSourceImpl implements UserDataSource {
   constructor(
+    private readonly emailService: Email,
     private readonly uidAdapter: UuidAdapter,
     private readonly momentAdapter: TimeAdapter,
     private readonly bcryptAdapter: UbcryptAdapter
@@ -35,10 +44,11 @@ export class UserDataSourceImpl implements UserDataSource {
 
   async createUser({
     createUserDto,
+    assignRolesDto,
     createAddressDto,
     createContactInformationDto,
     createPersonalInformationDto,
-  }: CreateUserDtos) {
+  }: CreateUserDtos): Promise<UserEntity> {
     const transaction = await sequelize.transaction({
       isolationLevel: Transaction.ISOLATION_LEVELS.READ_COMMITTED,
     });
@@ -73,13 +83,16 @@ export class UserDataSourceImpl implements UserDataSource {
       const contactInformation = await this.createContactInformation(createContactInformationDto, user.id, transaction);
       const address = await this.createAddress(createAddressDto, user.id, transaction);
       const token = await this.createToken(user.id, transaction);
+      const assignRoles = await this.assignRoles(assignRolesDto, user.id, transaction);
 
       const userMapper = UserMapper(user);
       userMapper.token = [token];
       userMapper.address = address;
+      userMapper.assignRoles = assignRoles;
       userMapper.personalInformation = personalInformation;
       userMapper.contactInformation = contactInformation;
 
+      await this.sendWelcomeEmail(userMapper);
       await transaction.commit();
       return userMapper;
     } catch (error) {
@@ -91,6 +104,15 @@ export class UserDataSourceImpl implements UserDataSource {
 
       throw CustomError.internal();
     }
+  }
+
+  private async sendWelcomeEmail(user: UserEntity) {
+    const template = this.emailService.prepareHtml('welcome', {
+      fullName: user.getFullName(),
+      resetLink: this.emailService.resetLink(),
+    });
+
+    await this.emailService.sendEmail('Welcome to our platform', user.email, template);
   }
 
   private async createPersonalInformation(
@@ -136,7 +158,10 @@ export class UserDataSourceImpl implements UserDataSource {
       createPersonalInformationDto.personTypeId = personType.id;
     }
 
-    const error: string | null = PersonalInformationEntity.validateDto(createPersonalInformationDto, <Identifications>identification.code);
+    const error: string | null = PersonalInformationEntity.validateDto(
+      createPersonalInformationDto,
+      <Identifications>identification.code
+    );
     if (error) {
       throw CustomError.badRequest(error);
     }
@@ -225,6 +250,33 @@ export class UserDataSourceImpl implements UserDataSource {
     );
 
     return ContactInformationMapper(contactInformation);
+  }
+
+  private async assignRoles(assignRolesDto: AssignRoleDto[], userId: number, transaction: Transaction) {
+    const roles = await Role.findAll({
+      where: {
+        code: {
+          [Op.in]: assignRolesDto.map((dto) => dto.code),
+        },
+      },
+      transaction,
+    });
+
+    if (roles.length !== assignRolesDto.length) throw CustomError.badRequest('Role not found');
+
+    const assignedRoles = await AssignedRole.bulkCreate(
+      assignRolesDto.map((dto) => ({
+        userId,
+        roleId: roles.find((role) => role.code === dto.code)!.id,
+      })),
+      { transaction }
+    );
+
+    return assignedRoles.map((assignedRole) => AssignRoleMapper({
+      id: assignedRole.id,
+      userId: assignedRole.userId,
+      roleId: assignedRole.roleId,
+    }));
   }
 
   private async createToken(userId: number, transaction: Transaction) {

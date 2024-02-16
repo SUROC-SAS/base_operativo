@@ -4,3 +4,4 @@ export * from './contact-information.entity';
 export * from './personal-information.entity';
 export * from './token.entity';
 export * from './user.entity';
+export * from './assign-role.entity';

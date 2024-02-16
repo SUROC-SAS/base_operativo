@@ -3,6 +3,7 @@ import { CustomError } from '#/domain/errors/custom.error';
 import { AddressEntity } from './address.entity';
 import { ContactInformationEntity } from './contact-information.entity';
 import { PersonalInformationEntity } from './personal-information.entity';
+import { AssignRoleEntity } from './assign-role.entity';
 
 export class UserEntity {
   id: number;
@@ -10,14 +11,11 @@ export class UserEntity {
   email: string;
   token?: TokenEntity[];
   address?: AddressEntity;
+  assignRoles?: AssignRoleEntity[];
   contactInformation?: ContactInformationEntity;
   personalInformation?: PersonalInformationEntity;
 
-  constructor(
-    id: number,
-    uid: string,
-    email: string,
-  ) {
+  constructor(id: number, uid: string, email: string) {
     this.id = id;
     this.uid = uid;
     this.email = email;

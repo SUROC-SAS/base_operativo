@@ -17,11 +17,12 @@ export class UserRoutes {
     const uidAdapter = new UidAdapter();
     const momentAdapter = new MomentAdapter();
     const bcryptAdapter = new BcryptAdapter();
-    const database = new UserDataSourceImpl(uidAdapter, momentAdapter, bcryptAdapter);
-    const repository = new UserRepositoryImpl(database);
-    const emailService = new EmailService({ host: SMTP_HOST, port: SMTP_PORT, user: SMTP_USER, pass: SMTP_PASSWORD });
-    const controller = new UserController(repository, emailService);
 
+    const emailService = new EmailService({ host: SMTP_HOST, port: SMTP_PORT, user: SMTP_USER, pass: SMTP_PASSWORD });
+    const database = new UserDataSourceImpl(emailService, uidAdapter, momentAdapter, bcryptAdapter);
+    const repository = new UserRepositoryImpl(database);
+
+    const controller = new UserController(repository);
     router.post('/', controller.createUser);
     return router;
   }

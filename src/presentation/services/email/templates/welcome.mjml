@@ -18,7 +18,7 @@
       <mj-column>
         <mj-text font-weight="bold"> Hola {{ fullName }}, </mj-text>
         <mj-text line-height="18px">
-          Has sido registrado en el sistema interno de Indervalle para iniciar el proceso de contratación.
+          Has sido registrado en el sistema.
         </mj-text>
         <mj-text line-height="18px"> Haga click a continuación para confirmar su cuenta y configurar su contraseña. </mj-text>
       </mj-column>

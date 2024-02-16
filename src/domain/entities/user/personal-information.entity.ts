@@ -14,7 +14,7 @@ type Constructor = {
   identificationId: number;
   taxLiabilityId: number;
   personTypeId: number;
-}
+};
 
 export class PersonalInformationEntity {
   id: number;
@@ -57,7 +57,7 @@ export class PersonalInformationEntity {
 
   getFullName(): string {
     const { firstName, firstSurname, businessName } = this;
-    if ((!firstName && !firstSurname) && !businessName) {
+    if (!firstName && !firstSurname && !businessName) {
       throw CustomError.internal('User does not have personal information');
     }
 

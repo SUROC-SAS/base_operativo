@@ -10,6 +10,7 @@ export const envs = {
   DB_PORT: get('DB_PORT').required().asPortNumber(),
   DB_MIGRATE_STORAGE: get('DB_MIGRATE_STORAGE').required().asString(),
   SECRET: get('SECRET').required().asString(),
+  ADMIN_EMAIL: get('ADMIN_EMAIL').required().asString(),
   SMTP_HOST: get('SMTP_HOST').required().asString(),
   SMTP_USER: get('SMTP_USER').required().asString(),
   SMTP_PORT: get('SMTP_PORT').required().asPortNumber(),
