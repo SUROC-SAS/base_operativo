@@ -1,4 +1,4 @@
-import { AssignRoleDto, CreateAddressDto, CreateContactInformationDto, CreatePersonalInformationDto, CreateUserDto } from '#/domain/dtos';
+import { AssignRoleDto, CreateAddressDto, CreateContactInformationDto, CreatePersonalInformationDto, CreateUserDto, UpdateUserDto } from '#/domain/dtos';
 
 export interface User {
   id: number;
@@ -9,6 +9,14 @@ export interface User {
 export interface CreateUserDtos {
   createUserDto: CreateUserDto;
   assignRolesDto: AssignRoleDto[];
+  createAddressDto: CreateAddressDto;
+  createContactInformationDto: CreateContactInformationDto;
+  createPersonalInformationDto: CreatePersonalInformationDto;
+}
+
+export interface UpdateUserDtos {
+  updateUserDto: UpdateUserDto;
+  assignRolesDto?: AssignRoleDto[];
   createAddressDto: CreateAddressDto;
   createContactInformationDto: CreateContactInformationDto;
   createPersonalInformationDto: CreatePersonalInformationDto;

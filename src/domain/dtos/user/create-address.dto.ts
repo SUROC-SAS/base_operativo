@@ -3,10 +3,10 @@ import { GENERATOR, Validator } from '#/config/adapters/validator';
 interface Constructor {
   address: string;
   countryId: number;
-  stateId?: number;
-  stateName?: string;
+  stateId?: number | null;
+  stateName?: string | null;
   postalCode: string;
-  municipalityId?: number;
+  municipalityId?: number | null;
 }
 
 export class CreateAddressDto {
@@ -17,7 +17,7 @@ export class CreateAddressDto {
   postalCode: Constructor['postalCode'];
   municipalityId: Constructor['municipalityId'];
 
-  private constructor({ address, stateId, countryId, stateName, postalCode, municipalityId }: Constructor) {
+  private constructor({ address, stateId = null, countryId, stateName = null, postalCode, municipalityId = null }: Constructor) {
     this.stateId = stateId;
     this.address = address;
     this.postalCode = postalCode;

@@ -2,8 +2,8 @@ import { GENERATOR, Validator } from '#/config/adapters/validator';
 
 interface Constructor {
   mobile: number;
-  phoneOne?: number;
-  phoneTwo?: number;
+  phoneOne?: number | null;
+  phoneTwo?: number | null;
 }
 
 export class CreateContactInformationDto {
@@ -11,7 +11,7 @@ export class CreateContactInformationDto {
   phoneOne: Constructor['phoneOne'];
   phoneTwo: Constructor['phoneTwo'];
 
-  private constructor({ mobile, phoneOne, phoneTwo }: Constructor) {
+  private constructor({ mobile, phoneOne = null, phoneTwo = null }: Constructor) {
     this.mobile = mobile;
     this.phoneOne = phoneOne;
     this.phoneTwo = phoneTwo;

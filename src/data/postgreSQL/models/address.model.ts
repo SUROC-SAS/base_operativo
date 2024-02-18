@@ -15,10 +15,10 @@ import { sequelize } from '../postgreSQL-database';
 export default class Address extends Model<InferAttributes<Address>, InferCreationAttributes<Address>> {
   declare id: CreationOptional<number>;
   declare address: string;
-  declare postalCode: CreationOptional<string>;
-  declare stateName: CreationOptional<string>;
-  declare stateId: CreationOptional<number>;
-  declare municipalityId: CreationOptional<number>;
+  declare postalCode: CreationOptional<string | null>;
+  declare stateName: CreationOptional<string | null>;
+  declare stateId: CreationOptional<number | null>;
+  declare municipalityId: CreationOptional<number | null>;
   declare countryId: number;
   declare userId: number;
   declare createdAt: CreationOptional<Date>;

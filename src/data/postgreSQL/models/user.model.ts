@@ -11,6 +11,7 @@ import { sequelize } from '../postgreSQL-database';
 import ContactInformation from './contact-information.model';
 import PersonalInformation from './personal-information.model';
 import Role from './role.model';
+import Address from './address.model';
 
 export default class User extends Model<InferAttributes<User>, InferCreationAttributes<User>> {
   declare id: CreationOptional<number>;
@@ -27,6 +28,9 @@ export default class User extends Model<InferAttributes<User>, InferCreationAttr
   declare personalInformation?: PersonalInformation;
   declare getPersonalInformation: HasOneGetAssociationMixin<PersonalInformation>;
 
+  declare address?: Address;
+  declare getAddress: HasOneGetAssociationMixin<Address>;
+
   declare roles?: Role[];
   declare getRoles: HasManyGetAssociationsMixin<Role>;
 
@@ -34,6 +38,7 @@ export default class User extends Model<InferAttributes<User>, InferCreationAttr
   declare getContactInformation: HasOneGetAssociationMixin<ContactInformation>;
 
   static associate(): void {
+    User.hasOne(Address, { as: 'address', sourceKey: 'id', foreignKey: 'userId' });
     User.hasOne(ContactInformation, { as: 'contactInformation', sourceKey: 'id', foreignKey: 'userId' });
     User.hasOne(PersonalInformation, { as: 'personalInformation', sourceKey: 'id', foreignKey: 'userId' });
 

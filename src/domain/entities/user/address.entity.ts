@@ -13,16 +13,17 @@ type Constructor = {
 export class AddressEntity {
   id: number;
   address: string;
-  stateId: number;
+  stateId?: number | null;
   countryId: number;
-  stateName?: string;
+  stateName?: string | null;
   postalCode: string;
-  municipalityId?: number;
+  municipalityId?: number | null;
 
-  constructor({ id, address, stateId, countryId, postalCode, municipalityId }: Constructor) {
+  constructor({ id, address, stateName, stateId, countryId, postalCode, municipalityId }: Constructor) {
     this.id = id;
     this.address = address;
     this.stateId = stateId;
+    this.stateName = stateName;
     this.countryId = countryId;
     this.postalCode = postalCode;
     this.municipalityId = municipalityId;
@@ -33,7 +34,6 @@ export class AddressEntity {
     if (isNational) {
       if (!addressDto.address) error.push('Missing address');
       if (!addressDto.postalCode) error.push('Missing postalCode');
-      if (!addressDto.stateName) error.push('Missing stateName');
       if (!addressDto.stateId) error.push('Missing stateId');
       if (!addressDto.countryId) error.push('Missing countryId');
       if (!addressDto.municipalityId) error.push('Missing municipalityId');
@@ -43,16 +43,17 @@ export class AddressEntity {
         return message.toString();
       }
 
-      addressDto.stateName = undefined;
+      addressDto.stateName = null;
       return null;
     }
 
     if (!addressDto.address) error.push('Missing address');
+    if (!addressDto.postalCode) error.push('Missing postalCode');
     if (!addressDto.stateName) error.push('Missing stateName');
     if (!addressDto.countryId) error.push('Missing countryId');
 
-    addressDto.stateId = undefined;
-    addressDto.municipalityId = undefined;
+    addressDto.stateId = null;
+    addressDto.municipalityId = null;
     if (error.length) {
       const message = new Intl.ListFormat('en').format(error);
       return message.toString();

@@ -15,8 +15,8 @@ export default class ContactInformation extends Model<
 > {
   declare id: CreationOptional<number>;
   declare mobile: number;
-  declare phoneOne: CreationOptional<number>;
-  declare phoneTwo: CreationOptional<number>;
+  declare phoneOne: CreationOptional<number | null>;
+  declare phoneTwo: CreationOptional<number | null>;
   declare userId: number;
   declare createdAt: CreationOptional<Date>;
   declare updatedAt: CreationOptional<Date>;

@@ -7,12 +7,14 @@ import { sequelize } from '#/data/postgreSQL';
 import { CustomError } from '#/domain/errors/custom.error';
 import { JWTAdapter } from '#/domain/interfaces/adapters/jwt.adapter.interface';
 import { UbcryptAdapter } from '#/domain/interfaces/adapters/bcrypt.adapter.interface';
+import { UserEntity } from '#/domain/entities/user';
+import { RoleMapper } from '../mappers/user/role.mapper';
 
 export class AuthDataSourceImpl implements AuthDataSource {
   constructor(
     private readonly jwtAdapter: JWTAdapter,
     private readonly bcryptAdapter: UbcryptAdapter
-  ) {}
+  ) { }
 
   async auth({ email, password }: AuthDto): Promise<string> {
     const transaction = await sequelize.transaction({
@@ -53,7 +55,7 @@ export class AuthDataSourceImpl implements AuthDataSource {
     }
   }
 
-  async authWithToken({ email }: Record<string, unknown>) {
+  async authWithToken({ email }: Record<string, string>): Promise<UserEntity> {
     const transaction = await sequelize.transaction({
       isolationLevel: Transaction.ISOLATION_LEVELS.READ_COMMITTED,
     });
@@ -64,17 +66,17 @@ export class AuthDataSourceImpl implements AuthDataSource {
           active: true,
           email: email!,
         },
-        attributes: {
-          include: ['password'],
-          exclude: ['lastAccess'],
-        },
+        include: ['roles'],
         transaction,
       });
 
       if (!user) throw CustomError.unauthorized('Error en la autenticación.');
       if (!user.emailValidate) throw CustomError.unauthorized('Error en la autenticación.');
 
-      return UserMapper(user);
+      const userEntity = UserMapper(user);
+      const rolesEntity = user.roles?.map((role) => RoleMapper(role));
+      userEntity.roles = rolesEntity;
+      return userEntity;
     } catch (error) {
       console.log(error);
       await transaction.rollback();

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import User from '#/data/postgreSQL/models/user.model';
 import Token from '#/data/postgreSQL/models/token.model';
 import State from '#/data/postgreSQL/models/state.model';
@@ -13,7 +14,7 @@ import { AssignRoleMapper, UserMapper } from '../mappers';
 import { Op, Transaction } from 'sequelize';
 import { UserDataSource } from '#/domain';
 import { sequelize } from '#/data/postgreSQL';
-import { CreateUserDtos, Email, Identifications } from '#/domain/interfaces';
+import { CreateUserDtos, Email, Identifications, UpdateUserDtos } from '#/domain/interfaces';
 import { CustomError } from '#/domain/errors/custom.error';
 import { TokenMapper } from '../mappers/user/token.mapper';
 import { AddressMapper } from '../mappers/user/address.mapper';
@@ -30,7 +31,7 @@ import {
   CreatePersonalInformationDto,
   CreateTokenDto,
 } from '#/domain/dtos';
-import { AddressEntity, PersonalInformationEntity, UserEntity } from '#/domain/entities/user';
+import { AddressEntity, AssignRoleEntity, ContactInformationEntity, PersonalInformationEntity, UserEntity } from '#/domain/entities/user';
 import Role from '#/data/postgreSQL/models/role.model';
 import AssignedRole from '#/data/postgreSQL/models/assigned-role.model';
 
@@ -106,6 +107,65 @@ export class UserDataSourceImpl implements UserDataSource {
     }
   }
 
+  async updateUser({
+    updateUserDto,
+    assignRolesDto,
+    createAddressDto,
+    createContactInformationDto,
+    createPersonalInformationDto,
+  }: UpdateUserDtos): Promise<UserEntity> {
+    const transaction = await sequelize.transaction({
+      isolationLevel: Transaction.ISOLATION_LEVELS.READ_COMMITTED,
+    });
+
+    try {
+      const user = await User.findByPk(updateUserDto.id, {
+        transaction,
+        lock: Transaction.LOCK.UPDATE,
+      });
+
+      if (!user) {
+        throw CustomError.notFound('User not found');
+      }
+
+      const userExistWithEmail = await User.findOne({
+        where: {
+          id: {
+            [Op.ne]: updateUserDto.id,
+          },
+          email: updateUserDto.email,
+        },
+        transaction,
+        lock: Transaction.LOCK.UPDATE,
+      });
+
+      if (userExistWithEmail) {
+        throw CustomError.badRequest('User with this email already exist');
+      }
+
+      const addressEntity = await this.updateAddress(createAddressDto, user.id, transaction);
+      const contactInformationEntity = await this.updateContactInformation(createContactInformationDto, user.id, transaction);
+
+      if (assignRolesDto) {
+        const assignRoles = await this.updateAssignRoles(assignRolesDto, user.id, transaction);
+      }
+
+      throw CustomError.notFound('Error intencional');
+
+    } catch (error) {
+      console.log(error);
+      await transaction.rollback();
+      if (error instanceof CustomError) {
+        throw error;
+      }
+
+      throw CustomError.internal();
+    }
+  }
+
+  /**
+   * @description methods to create information of user
+   */
   private async sendWelcomeEmail(user: UserEntity) {
     const template = this.emailService.prepareHtml('welcome', {
       fullName: user.getFullName(),
@@ -199,7 +259,7 @@ export class UserDataSourceImpl implements UserDataSource {
     return PersonalInformationMapper(personalInformation);
   }
 
-  private async createAddress(createAddressDto: CreateAddressDto, userId: number, transaction: Transaction) {
+  private async createAddress(createAddressDto: CreateAddressDto, userId: number, transaction: Transaction): Promise<AddressEntity> {
     const country = await Country.findByPk(createAddressDto.countryId, { transaction });
     if (!country) throw CustomError.badRequest('Pais no encontrado.');
 
@@ -238,7 +298,7 @@ export class UserDataSourceImpl implements UserDataSource {
     contactInformationDto: CreateContactInformationDto,
     userId: number,
     transaction: Transaction
-  ) {
+  ): Promise<ContactInformationEntity> {
     const contactInformation = await ContactInformation.create(
       {
         mobile: contactInformationDto.mobile,
@@ -252,7 +312,7 @@ export class UserDataSourceImpl implements UserDataSource {
     return ContactInformationMapper(contactInformation);
   }
 
-  private async assignRoles(assignRolesDto: AssignRoleDto[], userId: number, transaction: Transaction) {
+  private async assignRoles(assignRolesDto: AssignRoleDto[], userId: number, transaction: Transaction): Promise<AssignRoleEntity[]> {
     const roles = await Role.findAll({
       where: {
         code: {
@@ -295,5 +355,161 @@ export class UserDataSourceImpl implements UserDataSource {
 
     const token = await Token.create(createTokenDto, { transaction });
     return TokenMapper(token);
+  }
+
+  /**
+   * @description methods to update information of user
+   */
+  private async updateAddress(createAddressDto: CreateAddressDto, userId: number, transaction: Transaction): Promise<AddressEntity> {
+    const address = await Address.findOne({
+      where: {
+        userId,
+      },
+      transaction,
+      lock: Transaction.LOCK.UPDATE,
+    });
+
+    if (!address) {
+      throw CustomError.notFound('Address not found');
+    }
+
+    const country = await Country.findByPk(createAddressDto.countryId, { transaction });
+    if (!country) throw CustomError.badRequest('Country not found.');
+
+    let error: string | null = null;
+    const national = country.code === CountriesCodes.COLOMBIA;
+    error = AddressEntity.validateDto(createAddressDto, national);
+    if (national) {
+      const [state, municipality] = await Promise.all([
+        State.findByPk(createAddressDto.stateId!, { transaction }),
+        Municipality.findByPk(createAddressDto.municipalityId!, { transaction }),
+      ]);
+
+      if (!state || !municipality) {
+        error += `${!state ? ', State not found.' : ''}${!municipality ? ', Municipality not found.' : ''}`;
+      }
+    }
+
+    if (error) throw CustomError.badRequest(error);
+    await address.update(
+      {
+        address: createAddressDto.address,
+        stateId: createAddressDto.stateId,
+        countryId: createAddressDto.countryId,
+        stateName: createAddressDto.stateName,
+        postalCode: createAddressDto.postalCode,
+        municipalityId: createAddressDto.municipalityId,
+      },
+      {
+        transaction
+      }
+    );
+
+    await address.reload({ transaction });
+    return AddressMapper(address);
+  }
+
+  private async updateContactInformation(createContactInformationDto: CreateContactInformationDto, userId: number, transaction: Transaction): Promise<ContactInformationEntity> {
+    const contactInformation = await ContactInformation.findOne({
+      where: {
+        userId,
+      },
+      transaction,
+      lock: Transaction.LOCK.UPDATE,
+    });
+
+    if (!contactInformation) {
+      throw CustomError.notFound('Contact information not found');
+    }
+
+    await contactInformation.update(
+      {
+        mobile: createContactInformationDto.mobile,
+        phoneOne: createContactInformationDto.phoneOne,
+        phoneTwo: createContactInformationDto.phoneTwo,
+      },
+      {
+        transaction
+      }
+    );
+
+    await contactInformation.reload({ transaction });
+    return ContactInformationMapper(contactInformation);
+  }
+
+  private async updateAssignRoles(assignRolesDto: AssignRoleDto[], userId: number, transaction: Transaction): Promise<AssignRoleEntity[]> {
+    const [currentRoles, roles] = await Promise.all([
+      AssignedRole.findAll({
+        where: {
+          userId,
+        },
+        include: [
+          {
+            association: 'role'
+          }
+        ],
+        transaction,
+        lock: Transaction.LOCK.UPDATE,
+      }),
+
+      Role.findAll({
+        where: {
+          code: {
+            [Op.in]: assignRolesDto.map((dto) => dto.code),
+          },
+        },
+        transaction,
+      }),
+    ]);
+
+    if (roles.length !== assignRolesDto?.length) {
+      throw Error('Error en la asignación de roles');
+    }
+
+    const mutatedRoles = roles.map((role) => role.id);
+    const currentRolesMutated = currentRoles.map((assignedRole) => assignedRole.role!.code);
+    await AssignedRole.destroy({
+      where: {
+        userId,
+        roleId: {
+          [Op.notIn]: mutatedRoles,
+        },
+      },
+      transaction,
+    });
+
+    const assignedRoles = roles.reduce((acc, role) => {
+      const rl = currentRolesMutated.some((m) => m === role.code);
+      if (!rl) {
+        acc.push({
+          userId,
+          roleId: role.id,
+        });
+      }
+
+      return acc;
+    }, [] as { userId: number, roleId: number }[]);
+
+    if (assignedRoles.length) {
+      await AssignedRole.bulkCreate(assignedRoles, { transaction });
+    }
+
+    const newAssignedRoles = await AssignedRole.findAll({
+      where: {
+        userId,
+      },
+      include: [
+        {
+          association: 'role'
+        }
+      ],
+      transaction,
+    });
+
+    return newAssignedRoles.map((assignedRole) => AssignRoleMapper({
+      id: assignedRole.id,
+      userId: assignedRole.userId,
+      roleId: assignedRole.roleId,
+    }));
   }
 }

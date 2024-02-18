@@ -4,12 +4,14 @@ import { AddressEntity } from './address.entity';
 import { ContactInformationEntity } from './contact-information.entity';
 import { PersonalInformationEntity } from './personal-information.entity';
 import { AssignRoleEntity } from './assign-role.entity';
+import { RoleEntity } from './role.entity';
 
 export class UserEntity {
   id: number;
   uid: string;
   email: string;
   token?: TokenEntity[];
+  roles?: RoleEntity[];
   address?: AddressEntity;
   assignRoles?: AssignRoleEntity[];
   contactInformation?: ContactInformationEntity;
